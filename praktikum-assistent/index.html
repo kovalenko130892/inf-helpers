@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Практикум: ИИ-ассистент учителя · 60 минут</title>
+<style>
+:root{
+  --ink:#1d2b3a;--ink2:#4a5c70;--line:#d9e1ea;--blue:#2f6fed;--teal:#12a594;
+  --amber:#f2a63b;--coral:#ef6b5b;--bg:#f4f7fb;--card:#ffffff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:17px/1.6 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:40;background:#fffcc;background:#ffffff;
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;
+  padding:10px 20px;box-shadow:0 2px 10px rgba(20,40,70,.05)}
+.top .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.2px}
+.top .brand small{display:block;font-weight:400;font-size:12px;color:var(--ink2)}
+svg.logo{width:44px;height:44px;flex:none}
+.timer{margin-left:auto;display:flex;align-items:center;gap:10px}
+.clock{font:600 26px/1 "Consolas","SF Mono",monospace;letter-spacing:1px;
+  padding:6px 12px;border-radius:10px;background:#f0f4fb;border:1px solid var(--line);min-width:104px;text-align:center}
+.clock.warn{color:#b45309;background:#fff7e6;border-color:#f6d9a3}
+.clock.over{color:#b42318;background:#feeceb;border-color:#f6c1bc}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;
+  padding:9px 14px;font:600 15px/1 inherit;cursor:pointer}
+.btn:hover{border-color:#b9c8da;background:#f7faff}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:#255fd4}
+.rc{font-size:13px;color:var(--ink2);padding:0 4px}
+/* ---------- layout ---------- */
+.wrap{display:grid;grid-template-columns:280px minmax(0,1fr);gap:28px;
+  max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+nav.side{position:sticky;top:86px;align-self:start;max-height:calc(100vh - 110px);overflow:auto;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px}
+nav.side a{display:flex;gap:10px;align-items:baseline;padding:9px 10px;border-radius:10px;
+  text-decoration:none;color:var(--ink);font-size:15px}
+nav.side a:hover{background:#f3f7fd}
+nav.side a.active{background:#eaf1ff;color:#1c4fd0;font-weight:600}
+.nav-time{font:600 12px/1 "Consolas",monospace;color:var(--ink2);min-width:44px}
+nav.side a.active .nav-time{color:#1c4fd0}
+main{min-width:0;display:flex;flex-direction:column;gap:22px}
+section.block{background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:26px 28px;scroll-margin-top:92px}
+section.block.now{outline:3px solid #cfe0ff;outline-offset:2px}
+.block-top{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.badge{background:#eaf1ff;color:#1c4fd0;border-radius:999px;padding:4px 12px;
+  font:700 13px/1.3 inherit}
+.block-kicker{color:var(--ink2);font-size:14px;letter-spacing:.4px;text-transform:uppercase}
+h2{font-size:28px;line-height:1.2;margin:8px 0 14px;letter-spacing:-.4px}
+h3.h3{font-size:19px;margin:26px 0 10px}
+p.lead{font-size:18px;color:var(--ink2);margin:0 0 16px}
+p.quip{color:var(--ink2);font-size:15px;margin:12px 0 0;font-style:italic}
+/* ---------- hero ---------- */
+.hero{display:flex;flex-direction:column;gap:4px;margin-bottom:18px}
+svg.hero-art{width:100%;max-width:720px;height:auto;margin:0 auto;display:block}
+.ask{background:#f6f9ff;border:1px dashed #c6d7f5;border-radius:14px;padding:14px 18px}
+.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+.numbers>div{background:#f8fafd;border:1px solid var(--line);border-radius:14px;padding:14px}
+.numbers b{display:block;font-size:32px;line-height:1.1;color:var(--blue)}
+.numbers span{color:var(--ink2);font-size:14px}
+.rule{background:#fff8ea;border-left:5px solid var(--amber);border-radius:10px;
+  padding:12px 16px;margin:14px 0 0}
+/* ---------- method ---------- */
+.method-head{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;align-items:start}
+svg.robot{width:260px;height:300px;max-width:100%}
+.tip{display:flex;gap:12px;align-items:flex-start;background:#f3faf8;border:1px solid #cdeae3;
+  border-radius:12px;padding:12px 14px;margin:12px 0}
+svg.mini{width:40px;height:40px;flex:none}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+.split .ok,.split .no{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:12px 14px}
+.split .ok{background:#f3faf8;border:1px solid #cdeae3}
+.split .no{background:#fef5f4;border:1px solid #f7d3ce}
+/* ---------- prompts ---------- */
+.prompt{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fbfdff;margin:14px 0}
+.prompt-head{display:flex;align-items:center;gap:12px;padding:9px 12px 9px 14px;
+  background:#eef4fd;border-bottom:1px solid var(--line)}
+.prompt-title{font-weight:600;font-size:15px;flex:1;min-width:0}
+.copy{border:1px solid #c3d3ea;background:#fff;color:#1c4fd0;border-radius:9px;
+  padding:7px 12px;font:600 14px/1 inherit;cursor:pointer;white-space:nowrap}
+.copy:hover{background:#eaf1ff}
+.copy.done{background:var(--teal);border-color:var(--teal);color:#fff}
+pre.prompt-text{margin:0;padding:14px 16px;white-space:pre-wrap;word-wrap:break-word;
+  font:15px/1.55 "Consolas","SF Mono",ui-monospace,monospace;color:#23364b}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.grid2 .prompt{margin:10px 0}
+/* ---------- misc ---------- */
+.q{background:#fff8ea;border:1px solid #f6e0b5;border-radius:12px;padding:10px 14px;
+  margin:16px 0 0;font-size:15px;color:#7a5a1c;font-style:italic}
+ol.steps{margin:0 0 6px;padding-left:22px}
+ol.steps li{margin:6px 0}
+table.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px;display:table}
+table.tbl th{background:#f1f5fb;text-align:left;padding:9px 12px;border:1px solid var(--line);font-size:14px}
+table.tbl td{padding:9px 12px;border:1px solid var(--line);vertical-align:top}
+.redlines{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:6px 0 14px}
+.redlines>div{background:#fef5f4;border:1px solid #f7d3ce;border-radius:14px;padding:14px;font-size:15px}
+.redlines b{display:block;font-size:26px;color:var(--coral);line-height:1}
+.quote{border-left:5px solid var(--teal);background:#f2faf8;padding:12px 16px;border-radius:10px;font-size:17px}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.checks .col{border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.checks h3{display:flex;align-items:center;gap:8px;font-size:16px;margin:0 0 8px}
+.checks label{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:15px;cursor:pointer}
+.checks input{width:19px;height:19px;margin:2px 0 0;accent-color:var(--blue);flex:none}
+.ok-col{background:#f7fcfb}.no-col{background:#fffafa}
+.artifacts{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:6px 0 18px}
+.artifacts>div{background:#f8fafd;border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.artifacts b{font-size:15px}
+.artifacts span{color:var(--ink2)}
+.artifacts svg{width:26px;height:26px}
+.fill{font-size:20px;background:#f8fafd;border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.blank{display:inline-block;min-width:280px;border-bottom:2px solid #9fb2c8}
+.closing{font-size:20px;font-weight:600;text-align:center;color:#1c4fd0;margin:22px 0 0}
+.foot{text-align:center;color:#7d8ea2;font-size:13px;padding:18px 0 0}
+/* ---------- mobile ---------- */
+@media (max-width:1080px){
+  .wrap{grid-template-columns:1fr;gap:16px}
+  nav.side{position:sticky;top:78px;max-height:none;overflow:auto;display:flex;gap:6px;
+    padding:8px;border-radius:12px;white-space:nowrap}
+  nav.side a{flex:none;padding:7px 12px}
+  .nav-time{display:none}
+  .method-head{grid-template-columns:1fr}
+  svg.robot{margin:0 auto}
+  .grid2,.split,.checks,.redlines,.numbers{grid-template-columns:1fr}
+  .artifacts{grid-template-columns:1fr 1fr}
+  h2{font-size:24px}
+  section.block{padding:20px 18px}
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .top{flex-wrap:wrap;gap:8px;padding:8px 12px}
+  .top .brand small{display:none}
+  .clock{font-size:22px;min-width:88px}
+  .btn{padding:8px 10px;font-size:14px}
+  .wrap{padding:12px 12px 60px}
+  .artifacts{grid-template-columns:1fr}
+  .blank{min-width:180px}
+  table.tbl{font-size:14px}
+  table.tbl th,table.tbl td{padding:7px 8px}
+}
+/* ---------- print ---------- */
+@media print{
+  .top,nav.side,.copy{display:none!important}
+  body{background:#fff;font-size:12pt}
+  .wrap{display:block;padding:0;max-width:none}
+  section.block{border:0;padding:0 0 14pt;break-inside:auto;page-break-after:always}
+  section.block:last-child{page-break-after:auto}
+  pre.prompt-text{font-size:10pt;border:1px solid #bbb;padding:8pt}
+  .q,.hero,.prompt{break-inside:avoid}
+  a{color:#000;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="4" width="40" height="40" rx="12" fill="#1b2a3d"/><g stroke="#5fd0c0" stroke-width="1.6" opacity=".8"><line x1="15" y1="20" x2="24" y2="15"/><line x1="24" y1="15" x2="33" y2="20"/><line x1="15" y1="20" x2="24" y2="31"/><line x1="33" y1="20" x2="24" y2="31"/></g><circle cx="15" cy="20" r="2.6" fill="#7ee0cf"/><circle cx="24" cy="15" r="2.6" fill="#7ee0cf"/><circle cx="33" cy="20" r="2.6" fill="#7ee0cf"/><circle cx="24" cy="31" r="2.6" fill="#7ee0cf"/></svg>
+  <div class="brand">ИИ-ассистент как метод выживания
+    <small>практикум · 60 минут · пять способов без программирования</small></div>
+  <div class="timer">
+    <div class="clock" id="clock">60:00</div>
+    <button class="btn primary" id="btn-start">Старт</button>
+    <button class="btn" id="btn-reset">Сброс</button>
+  </div>
+</header>
+<div class="wrap">
+  <nav class="side"><a href="#start" data-nav="start"><span class="nav-time">0–5</span><span class="nav-label">Вход · Зачем</span></a><a href="#passport" data-nav="passport"><span class="nav-time">10–18</span><span class="nav-label">Способ 1</span></a><a href="#panel" data-nav="panel"><span class="nav-time">18–28</span><span class="nav-label">Способ 2</span></a><a href="#docs" data-nav="docs"><span class="nav-time">28–38</span><span class="nav-label">Способ 3</span></a><a href="#voice" data-nav="voice"><span class="nav-time">38–45</span><span class="nav-label">Способ 4</span></a><a href="#photo" data-nav="photo"><span class="nav-time">45–53</span><span class="nav-label">Способ 5</span></a><a href="#safety" data-nav="safety"><span class="nav-time">53–57</span><span class="nav-label">Безопасность</span></a><a href="#finish" data-nav="finish"><span class="nav-time">57–60</span><span class="nav-label">Итог</span></a></nav>
+  <main>
+<section id="start" class="block"><div class="block-top"><span class="badge">0–5 мин</span><span class="block-kicker">Вход · Зачем</span></div><h2>ИИ-ассистент как метод выживания</h2>
+<div class="hero">
+  <svg class="hero-art" viewBox="0 0 720 300" role="img" aria-label="Робот разбирает стопку тетрадей">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef4ff"/><stop offset="1" stop-color="#f7fbff"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="300" rx="22" fill="url(#sky)"/>
+  <g opacity=".5" stroke="#2f6fed" stroke-width="1.2" fill="none">
+    <circle cx="96" cy="64" r="26"/><circle cx="96" cy="64" r="40"/><circle cx="96" cy="64" r="54"/>
+  </g>
+  <path d="M0 262 H720" stroke="#d7dfe8" stroke-width="3"/>
+  <g transform="translate(500,196) rotate(-8)"><rect width="78" height="56" rx="5" fill="#fff" stroke="#d7dfe8" stroke-width="2"/><line x1="10" y1="16" x2="66" y2="16" stroke="#2f6fed" stroke-width="2.5" opacity=".55"/><line x1="10" y1="28" x2="58" y2="28" stroke="#44576b" stroke-width="2" opacity=".35"/><line x1="10" y1="38" x2="64" y2="38" stroke="#44576b" stroke-width="2" opacity=".25"/></g><g transform="translate(534,180) rotate(-4)"><rect width="78" height="56" rx="5" fill="#fff" stroke="#d7dfe8" stroke-width="2"/><line x1="10" y1="16" x2="66" y2="16" stroke="#2f6fed" stroke-width="2.5" opacity=".55"/><line x1="10" y1="28" x2="58" y2="28" stroke="#44576b" stroke-width="2" opacity=".35"/><line x1="10" y1="38" x2="64" y2="38" stroke="#44576b" stroke-width="2" opacity=".25"/></g><g transform="translate(568,164) rotate(0)"><rect width="78" height="56" rx="5" fill="#fff" stroke="#d7dfe8" stroke-width="2"/><line x1="10" y1="16" x2="66" y2="16" stroke="#2f6fed" stroke-width="2.5" opacity=".55"/><line x1="10" y1="28" x2="58" y2="28" stroke="#44576b" stroke-width="2" opacity=".35"/><line x1="10" y1="38" x2="64" y2="38" stroke="#44576b" stroke-width="2" opacity=".25"/></g><g transform="translate(500,148) rotate(4)"><rect width="78" height="56" rx="5" fill="#fff" stroke="#d7dfe8" stroke-width="2"/><line x1="10" y1="16" x2="66" y2="16" stroke="#2f6fed" stroke-width="2.5" opacity=".55"/><line x1="10" y1="28" x2="58" y2="28" stroke="#44576b" stroke-width="2" opacity=".35"/><line x1="10" y1="38" x2="64" y2="38" stroke="#44576b" stroke-width="2" opacity=".25"/></g><g transform="translate(534,132) rotate(8)"><rect width="78" height="56" rx="5" fill="#fff" stroke="#d7dfe8" stroke-width="2"/><line x1="10" y1="16" x2="66" y2="16" stroke="#2f6fed" stroke-width="2.5" opacity=".55"/><line x1="10" y1="28" x2="58" y2="28" stroke="#44576b" stroke-width="2" opacity=".35"/><line x1="10" y1="38" x2="64" y2="38" stroke="#44576b" stroke-width="2" opacity=".25"/></g><g transform="translate(568,116) rotate(12)"><rect width="78" height="56" rx="5" fill="#fff" stroke="#d7dfe8" stroke-width="2"/><line x1="10" y1="16" x2="66" y2="16" stroke="#2f6fed" stroke-width="2.5" opacity=".55"/><line x1="10" y1="28" x2="58" y2="28" stroke="#44576b" stroke-width="2" opacity=".35"/><line x1="10" y1="38" x2="64" y2="38" stroke="#44576b" stroke-width="2" opacity=".25"/></g>
+  <g transform="translate(150,26) scale(0.86)">
+    <rect x="26" y="62" width="208" height="252" rx="26" fill="#fff" stroke="#d7dfe8" stroke-width="3"/>
+    <rect x="42" y="78" width="176" height="118" rx="18" fill="#1b2a3d"/>
+    <g stroke="#5fd0c0" stroke-width="1.6" opacity=".65">
+      <line x1="70" y1="118" x2="130" y2="100"/><line x1="130" y1="100" x2="190" y2="118"/>
+      <line x1="88" y1="176" x2="130" y2="196"/><line x1="130" y1="196" x2="172" y2="176"/>
+      <line x1="70" y1="118" x2="88" y2="176"/><line x1="190" y1="118" x2="172" y2="176"/>
+      <line x1="130" y1="100" x2="130" y2="196"/>
+    </g>
+    <g fill="#7ee0cf">
+      <circle cx="70" cy="118" r="4"/><circle cx="130" cy="100" r="4"/><circle cx="190" cy="118" r="4"/>
+      <circle cx="88" cy="176" r="4"/><circle cx="130" cy="196" r="4"/><circle cx="172" cy="176" r="4"/>
+    </g>
+    <circle cx="92" cy="108" r="14" fill="#fbfcfe"/><circle cx="168" cy="108" r="14" fill="#fbfcfe"/>
+    <circle cx="94" cy="110" r="7" fill="#1d2b3a" class="blink"/><circle cx="170" cy="110" r="7" fill="#1d2b3a" class="blink"/>
+    <path d="M112 140 q18 14 36 0" stroke="#12a594" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <rect x="60" y="208" width="140" height="86" rx="14" fill="#fff" stroke="#d7dfe8" stroke-width="3"/>
+    <rect x="74" y="226" width="112" height="7" rx="3.5" fill="#2f6fed" opacity=".7"/>
+    <rect x="74" y="244" width="86" height="7" rx="3.5" fill="#12a594" opacity=".55"/>
+    <rect x="74" y="262" width="100" height="7" rx="3.5" fill="#f2a63b" opacity=".7"/>
+    <line x1="130" y1="42" x2="130" y2="62" stroke="#44576b" stroke-width="4"/>
+    <circle cx="130" cy="32" r="13" fill="#f2a63b"/>
+    <rect x="6" y="150" width="22" height="54" rx="10" fill="#dbe6f5" stroke="#d7dfe8" stroke-width="2"/>
+    <rect x="232" y="150" width="22" height="54" rx="10" fill="#dbe6f5" stroke="#d7dfe8" stroke-width="2"/>
+  </g>
+  <g transform="translate(330,120)">
+    <rect width="210" height="34" rx="12" fill="#fff" stroke="#d7dfe8" stroke-width="2.5"/>
+    <path d="M-6 0 h222" stroke="#f2a63b" stroke-width="6" stroke-linecap="round"/>
+    <text x="16" y="23" font-size="15" fill="#44576b" font-family="inherit">черновик за 40 секунд</text>
+    <circle cx="188" cy="17" r="9" fill="#12a594"/>
+    <path d="M184 17 l3 3 l6 -7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g opacity=".9">
+    <circle cx="640" cy="72" r="5" fill="#ef6b5b"/><circle cx="672" cy="96" r="4" fill="#2f6fed"/>
+    <circle cx="612" cy="110" r="3.5" fill="#12a594"/><circle cx="690" cy="60" r="3" fill="#f2a63b"/>
+  </g>
+</svg>
+  <p class="quip">Мозг придумал нейросеть. Нейросеть придумала черновик. Черновик придумал, что его проверят. Проверять — по-прежнему вам.</p>
+</div>
+<div class="check-row">
+  <div class="ask"><b>Поднимите руку:</b> кто уже пробовал ИИ хотя бы раз? Кто пользуется каждый день? Кто ни разу?</div>
+</div>
+<div class="numbers">
+  <div><b>52</b><span>часа в неделю вне урока</span></div>
+  <div><b>6</b><span>часов на проверку тетрадей</span></div>
+  <div><b>3</b><span>часа на поиск материалов</span></div>
+</div>
+<p class="lead">Почти всё, что съедает вечер, — это текст. Пять способов ниже превращают «написать с нуля» в «отредактировать черновик».</p>
+<div class="rule"><b>Формула запроса:</b> Роль — Контекст — Задача — Формат — Ограничения — Проверка.</div>
+</section><section id="passport" class="block"><div class="block-top"><span class="badge">10–18 мин</span><span class="block-kicker">Способ 1</span></div><h2>Паспорт ассистента</h2>
+<div class="method-head">
+  <svg class="robot" viewBox="0 0 260 300" role="img" aria-label="Робот-нейросеть">
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9f0fb"/>
+    </linearGradient>
+    <linearGradient id="visorGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#243447"/><stop offset="1" stop-color="#13233a"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="130" cy="283" rx="72" ry="10" fill="#1d2b3a" opacity=".10"/>
+  <line x1="130" y1="42" x2="130" y2="62" stroke="#44576b" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="130" cy="32" r="13" fill="#f2a63b"/>
+  <circle cx="130" cy="32" r="13" fill="none" stroke="#d98b1c" stroke-width="2"/>
+  <circle cx="130" cy="32" r="22" fill="#f2a63b" opacity=".16" class="pulse"/>
+  <rect x="26" y="62" width="208" height="252" rx="26" fill="url(#bodyGrad)" stroke="#d7dfe8" stroke-width="3"/>
+  <rect x="42" y="78" width="176" height="118" rx="18" fill="url(#visorGrad)"/>
+  <g stroke="#5fd0c0" stroke-width="1.4" opacity=".55"><line x1="70" y1="118" x2="130" y2="100" />
+<line x1="130" y1="100" x2="190" y2="118" />
+<line x1="70" y1="118" x2="88" y2="176" />
+<line x1="130" y1="100" x2="130" y2="148" />
+<line x1="190" y1="118" x2="172" y2="176" />
+<line x1="88" y1="176" x2="130" y2="196" />
+<line x1="130" y1="196" x2="172" y2="176" />
+<line x1="88" y1="176" x2="130" y2="148" />
+<line x1="130" y1="148" x2="172" y2="176" />
+<line x1="70" y1="118" x2="130" y2="148" />
+<line x1="190" y1="118" x2="130" y2="148" />
+<line x1="130" y1="100" x2="130" y2="196" /></g>
+  <g fill="#7ee0cf"><circle cx="70" cy="118" r="3.4" class="n0" />
+<circle cx="130" cy="100" r="3.4" class="n1" />
+<circle cx="190" cy="118" r="3.4" class="n2" />
+<circle cx="88" cy="176" r="3.4" class="n0" />
+<circle cx="130" cy="196" r="3.4" class="n1" />
+<circle cx="172" cy="176" r="3.4" class="n2" />
+<circle cx="130" cy="148" r="4.4" class="n0" /></g>
+  <circle cx="92" cy="108" r="14" fill="#fbfcfe"/>
+  <circle cx="168" cy="108" r="14" fill="#fbfcfe"/>
+  <circle cx="94" cy="110" r="7" fill="#1d2b3a" class="blink"/>
+  <circle cx="170" cy="110" r="7" fill="#1d2b3a" class="blink"/>
+  <circle cx="96" cy="107" r="2.4" fill="#fff"/>
+  <circle cx="172" cy="107" r="2.4" fill="#fff"/>
+  <path d="M112 140 q18 14 36 0" stroke="#12a594" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <rect x="60" y="208" width="140" height="86" rx="14" fill="#fff" stroke="#d7dfe8" stroke-width="3"/>
+  <rect x="74" y="224" width="112" height="7" rx="3.5" fill="#2f6fed" opacity=".75"/>
+  <rect x="74" y="241" width="88" height="7" rx="3.5" fill="#2f6fed" opacity=".45"/>
+  <rect x="74" y="258" width="100" height="7" rx="3.5" fill="#12a594" opacity=".55"/>
+  <rect x="74" y="275" width="62" height="7" rx="3.5" fill="#f2a63b" opacity=".7"/>
+  <circle cx="188" cy="266" r="12" fill="#ef6b5b" opacity=".9"/>
+  <path d="M183 266 l4 4 l7 -8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="6" y="150" width="22" height="54" rx="10" fill="#dbe6f5" stroke="#d7dfe8" stroke-width="2"/>
+  <rect x="232" y="150" width="22" height="54" rx="10" fill="#dbe6f5" stroke="#d7dfe8" stroke-width="2"/>
+</svg>
+  <div>
+    <p class="lead">Одно сообщение — и случайный собеседник превращается в помощника, который знает ваш предмет, ваш тон и ваши запреты. Вставляется первым сообщением в <b>любой</b> чат, переносится между платформами копированием.</p>
+    
+<div class="prompt" id="p51768">
+  <div class="prompt-head">
+    <span class="prompt-title">Паспорт — вставьте первым сообщением в любой чат</span>
+    <button class="copy" data-target="p51768">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Ты — мой постоянный помощник-методист. Работай по этим правилам в каждом ответе.
+
+1. Я учитель: предмет — [предмет], классы — [классы], программа — [ФГОС/ФОП, авторская линия].
+2. Мой стиль: [коротко и по делу / подробно с пояснениями / дружелюбно, но без сюсюканья].
+3. Пиши простым русским языком. Без канцелярита, без вводных фраз вроде «Конечно!» и «Отличный вопрос!».
+4. По умолчанию отвечай в формате: [таблица / нумерованный список / короткие абзацы].
+5. Всегда указывай, что мне нужно проверить перед использованием: факты, даты, цифры, ссылки.
+6. Если данных не хватает — задай не больше двух уточняющих вопросов, потом предлагай вариант.
+7. Если ответа ты не знаешь или не уверен — скажи прямо: «не уверен, проверьте».
+8. Не придумывай цитаты, номера приказов, страницы учебника и ссылки.
+9. Не используй имена и персональные данные учеников. Я буду писать «ученик А».
+10. Не ставь оценки и не давай характеристик — только критерии, комментарии и варианты.
+11. Предлагай 2–3 варианта, если задача творческая, и один — если техническая.
+12. В конце длинного ответа — одна строка «Что проверить: ...».</pre>
+</div>
+    <div class="tip"><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6 l4.2 8.6 9.5 1.4 -6.9 6.7 1.6 9.4 -8.4 -4.4 -8.4 4.4 1.6 -9.4 -6.9 -6.7 9.5 -1.4z" fill="#fff3d6" stroke="#e0a020" stroke-width="2"/></svg><div><b>Заполните пять полей в квадратных скобках:</b> предмет, классы, программа, стиль ответа, формат по умолчанию. Остальное оставьте как есть.</div></div>
+    <div class="tip"><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="#fff6e8" stroke="#f2a63b" stroke-width="2"/><path d="M20 11 v9 l7 5" stroke="#c98315" stroke-width="3" fill="none" stroke-linecap="round"/></svg><div><b>Проверка одной фразой:</b> «Перечисли мои правила одним списком». Если правила на месте — паспорт работает.</div></div>
+  </div>
+</div>
+</section><section id="panel" class="block"><div class="block-top"><span class="badge">18–28 мин</span><span class="block-kicker">Способ 2</span></div><h2>Панель из семи промптов</h2>
+<p class="lead">Семь задач, которые повторяются каждую неделю. Квадратные скобки — единственное, что нужно заменить. Прогоните <b>две</b> карточки на теме этой недели.</p>
+<div class="grid2">
+
+<div class="prompt" id="p9873">
+  <div class="prompt-head">
+    <span class="prompt-title">1. План урока</span>
+    <button class="copy" data-target="p9873">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Составь план урока по теме [тема] для [класс] класса на 45 минут.
+Что уже прошли: [предыдущая тема]. Особенности класса: [например, 4 человека плохо читают].
+Формат: таблица — этап, время, что делает учитель, что делают ученики, как проверить результат.
+Ограничения: не больше 3 новых понятий, без заданий с интернетом, без имён учеников.
+В конце: 3 типичные ошибки по теме и 2 вопроса на понимание. Неуверенное помечай [проверить].</pre>
+</div>
+<div class="prompt" id="p19685">
+  <div class="prompt-head">
+    <span class="prompt-title">2. Задания трёх уровней</span>
+    <button class="copy" data-target="p19685">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Дай задания по теме [тема] для [класс] класса, три уровня.
+Уровень 1 — базовый: узнавание и повторение, 3 задания.
+Уровень 2 — средний: применение по образцу, 3 задания.
+Уровень 3 — продвинутый: перенос в новую ситуацию, 2 задания.
+Формат: таблица — уровень, задание, что проверяет, время выполнения.
+Ограничения: без интернета, без оборудования, все данные — вымышленные.
+В конце: как понять, что ученик готов перейти на следующий уровень.</pre>
+</div>
+<div class="prompt" id="p21814">
+  <div class="prompt-head">
+    <span class="prompt-title">3. Критерии и комментарии</span>
+    <button class="copy" data-target="p21814">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Я проверяю работу по теме [тема], [класс] класс.
+Составь рубрику из 4 критериев, по 0–2 балла каждый, с понятными описаниями.
+Затем дай 3 варианта комментария ученику: за сильную сторону, за типичную ошибку, за небрежность.
+Тон: уважительный, без сарказма, ученик должен понять, что делать дальше.
+Не ставь итоговую оценку — только критерии и баллы. Скажи, что проверять учителю.</pre>
+</div>
+<div class="prompt" id="p13153">
+  <div class="prompt-head">
+    <span class="prompt-title">4. Объясни иначе</span>
+    <button class="copy" data-target="p13153">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Класс не понял тему [тема], [класс] класс. Я объяснял так: [как именно].
+Дай три других объяснения:
+1) через бытовую аналогию;
+2) пошагово, как алгоритм;
+3) через типичную ошибку — покажи неверное рассуждение и место, где оно ломается.
+Каждое — не больше 8 строк. Без новых терминов, которых не было в теме.</pre>
+</div>
+<div class="prompt" id="p15339">
+  <div class="prompt-head">
+    <span class="prompt-title">5. Письмо родителю</span>
+    <button class="copy" data-target="p15339">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Напиши письмо родителю ученика [класс] класса.
+Ситуация: [что произошло, без имён и деталей, которые нельзя разглашать].
+Что я хочу: [например, чтобы дома проверили домашнее задание / чтобы родитель пришёл на разговор].
+Тон: спокойный, уважительный, без обвинений и канцелярита. Объём — до 120 слов.
+Структура: факт — что меня беспокоит — что предлагаю — просьба о feedback.
+Не используй имена, не угрожай и не оценивай личность ребёнка.</pre>
+</div>
+<div class="prompt" id="p14265">
+  <div class="prompt-head">
+    <span class="prompt-title">6. Тест и карточки</span>
+    <button class="copy" data-target="p14265">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Составь проверочный тест по теме [тема], [класс] класс.
+10 вопросов: 6 с выбором одного ответа, 2 на соответствие, 2 открытых.
+К каждому вопросу — 4 варианта и указание, какое понятие проверяется.
+В конце — ключ ответов и объяснение к каждому заданию в одну строку.
+Ограничения: без вопросов-ловушек, без тем, которых не было; неуверенное помечай [проверить].</pre>
+</div>
+<div class="prompt" id="p15324">
+  <div class="prompt-head">
+    <span class="prompt-title">7. Памятка ученику</span>
+    <button class="copy" data-target="p15324">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Сделай памятку для ученика [класс] класса по теме [тема] на одну страницу.
+Структура: главное в 3 строках — алгоритм из 5 шагов — 3 типичные ошибки — 1 вопрос для самопроверки.
+Язык: как для ученика, короткие предложения, без сложных терминов.
+Формат: заголовки и списки, чтобы можно было распечатать и вклеить в тетрадь.</pre>
+</div>
+</div>
+<div class="q">Зачем семь, а не тридцать? Промптов на тридцать карточек не бывает — бывает заметка, которую открывают один раз. А эта панель влезает в одну вкладку и в одну голову перед первым уроком.</div>
+</section><section id="docs" class="block"><div class="block-top"><span class="badge">28–38 мин</span><span class="block-kicker">Способ 3</span></div><h2>Ассистент на ваших документах</h2>
+<p class="lead">Прикрепите рабочую программу, критерии или календарно-тематический план — и спросите по нему. Бот работает только внутри файла.</p>
+<ol class="steps">
+  <li>Нажмите <b>скрепку</b> рядом с полем ввода и выберите файл. Дождитесь, пока он прикрепится.</li>
+  <li>Вставьте запрос ниже и обязательно оставьте строку про «нет в материалах».</li>
+  <li>Сверьте два-три факта с оригиналом. Ссылка на несуществующий раздел — ошибка.</li>
+  <li>Назовите чат по имени документа: «КТП — математика 6».</li>
+</ol>
+
+<div class="prompt" id="p47375">
+  <div class="prompt-head">
+    <span class="prompt-title">Запрос по документу — универсальный шаблон</span>
+    <button class="copy" data-target="p47375">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Я прикрепил документ: [название документа].
+Работай только по его содержанию. Если ответа в документе нет — напиши «нет в материалах» и не додумывай.
+Задача: [что нужно сделать].
+Формат: [таблица / список / план].
+При каждом важном утверждении указывай, из какого раздела документа оно взято.
+В конце: список того, что мне нужно сверить с оригиналом.</pre>
+</div>
+<div class="q" style="text-align:center">Не удалось прикрепить рабочий план? Попробуйте спросить бота, кто его написал в последний раз без выходных. Сочувствие — тоже сервис.</div>
+</section><section id="voice" class="block"><div class="block-top"><span class="badge">38–45 мин</span><span class="block-kicker">Способ 4</span></div><h2>Голосовой ассистент в кармане</h2>
+<p class="lead">Телефон, приложение, наушники — и черновик можно надиктовать по дороге в школу. Для голоса паспорт укорачивается до четырёх строк.</p>
+
+<div class="prompt" id="p32220">
+  <div class="prompt-head">
+    <span class="prompt-title">Голосовой паспорт — 4 строки</span>
+    <button class="copy" data-target="p32220">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Ты мой помощник-методист. Предмет — [предмет], классы — [классы].
+Говори коротко, простыми фразами. Не больше 5 пунктов за ответ.
+Если не уверен — скажи «проверьте». Имена учеников не используй.
+Отвечай так, чтобы я мог слушать, а не читать.</pre>
+</div>
+<div class="split">
+  <div class="ok"><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="#e6f7f3" stroke="#12a594" stroke-width="2"/><path d="M12 20 l6 6 l11 -13" stroke="#12a594" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><div><b>Говорите коротко.</b> Одно предложение — одна мысль. После вопроса — пауза в 1–2 секунды.</div></div>
+  <div class="no"><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="#fdecea" stroke="#ef6b5b" stroke-width="2"/><path d="M13 13 l14 14 M27 13 l-14 14" stroke="#ef6b5b" stroke-width="3.4" stroke-linecap="round"/></svg><div><b>Не диктуйте 12 правил.</b> Минута бормотания — и зрители потеряны. Для голоса есть сжатая версия.</div></div>
+</div>
+<div class="q">Четыре способа реакции класса на «приложение поставило точку не туда»: смех, потеря внимания, крик, скачивание. Самый быстрый — тоже четыре способа использовать ИИ.</div>
+</section><section id="photo" class="block"><div class="block-top"><span class="badge">45–53 мин</span><span class="block-kicker">Способ 5</span></div><h2>Фото → разбор по критериям</h2>
+<div class="split">
+  
+<div class="prompt" id="p25003">
+  <div class="prompt-head">
+    <span class="prompt-title">Разбор работы по критериям</span>
+    <button class="copy" data-target="p25003">Скопировать</button>
+  </div>
+  <pre class="prompt-text">На фото — работа ученика [класс] класса по теме [тема].
+Сначала распознай текст и покажи его, чтобы я проверил распознавание.
+Затем разбери работу по критериям: [критерий 1], [критерий 2], [критерий 3].
+Для каждого критерия: выполнено / частично / не выполнено и одна строка пояснения.
+Найди не больше 3 главных ошибок. Не перечисляй мелочи.
+Не ставь оценку и не пиши итоговый балл — это решаю я.
+В конце: 2 сильных места работы и 1 вопрос, который стоит задать ученику.</pre>
+</div>
+  
+<div class="prompt" id="p19517">
+  <div class="prompt-head">
+    <span class="prompt-title">Упражнение на ошибку</span>
+    <button class="copy" data-target="p19517">Скопировать</button>
+  </div>
+  <pre class="prompt-text">Ученик [класс] класса допустил ошибку: [опиши или вставь фрагмент].
+Объясни эту ошибку так, как объяснил бы учитель ученику: коротко, без новых терминов.
+Затем составь 3 задания на эту же ошибку: от простого к сложному.
+И одно задание-ловушку, где эту ошибку легко допустить снова.
+Формат: задание — что проверяет — ответ.</pre>
+</div>
+</div>
+<table class="tbl">
+  <tr><th>Хорошо</th><th>Плохо</th></tr>
+  <tr><td>Печатный текст, аккуратный почерк</td><td>Мелкий почерк, бледная ручка, мятая бумага</td></tr>
+  <tr><td>Смысловые и логические ошибки</td><td>Точное распознавание формул и индексов</td></tr>
+  <tr><td>Разбор сочинения по критериям</td><td>Чертежи с мелкими обозначениями</td></tr>
+  <tr><td>Комментарии ученику</td><td>Оценка «как у учителя» — её не будет</td></tr>
+</table>
+<div class="tip"><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="#fdecea" stroke="#ef6b5b" stroke-width="2"/><path d="M13 13 l14 14 M27 13 l-14 14" stroke="#ef6b5b" stroke-width="3.4" stroke-linecap="round"/></svg><div><b>Закройте фамилию</b> плотной полосой или пальцем. «Ученик А» — это и приватность, и меньше вопросов потом.</div></div>
+</section><section id="safety" class="block"><div class="block-top"><span class="badge">53–57 мин</span><span class="block-kicker">Безопасность</span></div><h2>Три красные линии и чек-лист</h2>
+<div class="redlines">
+  <div><b>1</b><span>Персональные данные: ФИО, адреса, телефоны, фото детей, медицинские сведения</span></div>
+  <div><b>2</b><span>Решения вместо человека: итоговая оценка, характеристика, дисциплинарное решение</span></div>
+  <div><b>3</b><span>Непроверенные факты: даты, приказы, цитаты, страницы учебника, ссылки</span></div>
+</div>
+<div class="quote">«Если вы не загрузили бы этот текст в общий чат школы — не загружайте его и в нейросеть».</div>
+<div class="checks">
+  <div class="col ok-col">
+    <h3><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="#e6f7f3" stroke="#12a594" stroke-width="2"/><path d="M12 20 l6 6 l11 -13" stroke="#12a594" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Можно загружать</h3>
+    <label><input type="checkbox" data-k="s1"> Свои планы, конспекты, задания</label>
+    <label><input type="checkbox" data-k="s2"> Обезличенные работы: «ученик А»</label>
+    <label><input type="checkbox" data-k="s3"> Тексты учебников, свои копии</label>
+    <label><input type="checkbox" data-k="s4"> Публичные документы: ФГОС, ФОП</label>
+    <label><input type="checkbox" data-k="s5"> Свои вопросы и черновики</label>
+    <label><input type="checkbox" data-k="s6"> Темы уроков, критерии, рубрики</label>
+  </div>
+  <div class="col no-col">
+    <h3><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="#fdecea" stroke="#ef6b5b" stroke-width="2"/><path d="M13 13 l14 14 M27 13 l-14 14" stroke="#ef6b5b" stroke-width="3.4" stroke-linecap="round"/></svg> Нельзя загружать</h3>
+    <label><input type="checkbox" data-k="s7"> ФИО учеников и их родителей</label>
+    <label><input type="checkbox" data-k="s8"> Фотографии детей и документов с данными</label>
+    <label><input type="checkbox" data-k="s9"> Медицинские сведения, заключения ПМПК</label>
+    <label><input type="checkbox" data-k="s10"> Документы с грифом или персональными данными</label>
+    <label><input type="checkbox" data-k="s11"> Пароли, логины, данные доступов</label>
+    <label><input type="checkbox" data-k="s12"> Конфликтные ситуации с именами и деталями</label>
+  </div>
+</div>
+<div class="q">Правила безопасности занимают четыре минуты. Их восстановление после одного родительского чата занимает четыре вечера. Арифметика предельно простая.</div>
+</section><section id="finish" class="block"><div class="block-top"><span class="badge">57–60 мин</span><span class="block-kicker">Итог</span></div><h2>Что у вас осталось в руках</h2>
+<div class="artifacts">
+  <div><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6 l4.2 8.6 9.5 1.4 -6.9 6.7 1.6 9.4 -8.4 -4.4 -8.4 4.4 1.6 -9.4 -6.9 -6.7 9.5 -1.4z" fill="#fff3d6" stroke="#e0a020" stroke-width="2"/></svg><b>Паспорт</b><span>знает предмет и запреты</span></div>
+  <div><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6 l4.2 8.6 9.5 1.4 -6.9 6.7 1.6 9.4 -8.4 -4.4 -8.4 4.4 1.6 -9.4 -6.9 -6.7 9.5 -1.4z" fill="#fff3d6" stroke="#e0a020" stroke-width="2"/></svg><b>Панель</b><span>семь повторяющихся задач</span></div>
+  <div><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6 l4.2 8.6 9.5 1.4 -6.9 6.7 1.6 9.4 -8.4 -4.4 -8.4 4.4 1.6 -9.4 -6.9 -6.7 9.5 -1.4z" fill="#fff3d6" stroke="#e0a020" stroke-width="2"/></svg><b>Документы</b><span>ответы только по файлу</span></div>
+  <div><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6 l4.2 8.6 9.5 1.4 -6.9 6.7 1.6 9.4 -8.4 -4.4 -8.4 4.4 1.6 -9.4 -6.9 -6.7 9.5 -1.4z" fill="#fff3d6" stroke="#e0a020" stroke-width="2"/></svg><b>Голос</b><span>черновик в дороге</span></div>
+  <div><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6 l4.2 8.6 9.5 1.4 -6.9 6.7 1.6 9.4 -8.4 -4.4 -8.4 4.4 1.6 -9.4 -6.9 -6.7 9.5 -1.4z" fill="#fff3d6" stroke="#e0a020" stroke-width="2"/></svg><b>Фото</b><span>разбор и упражнение</span></div>
+</div>
+<div class="fill">Завтра я <span class="blank"></span></div>
+<h3 class="h3">План на 7 дней: один шаг в день, 5–15 минут</h3>
+<table class="tbl week">
+  <tr><th>День</th><th>Шаг</th><th>Мин</th></tr>
+  <tr><td>1</td><td>Вставить паспорт и прогнать одну карточку на завтрашнем уроке</td><td>10</td></tr>
+  <tr><td>2</td><td>Добавить в паспорт одно правило из практики</td><td>5</td></tr>
+  <tr><td>3</td><td>Загрузить рабочую программу и получить КТП на четверть</td><td>15</td></tr>
+  <tr><td>4</td><td>Прогнать карточку №3 на реальной проверочной</td><td>15</td></tr>
+  <tr><td>5</td><td>Сфотографировать обезличенную работу и получить разбор</td><td>10</td></tr>
+  <tr><td>6</td><td>Проговорить голосовой паспорт по дороге на работу</td><td>5</td></tr>
+  <tr><td>7</td><td>Оставить в заметке 5 рабочих карточек, остальное удалить</td><td>10</td></tr>
+</table>
+<h3 class="h3">Четыре платформы и адреса</h3>
+<table class="tbl">
+  <tr><th>Платформа</th><th>Веб</th><th>Windows</th><th>Android</th></tr>
+  <tr><td>GigaChat</td><td>giga.chat</td><td>браузер</td><td>RuStore: «ГигаЧат»</td></tr>
+  <tr><td>Алиса AI</td><td>alice.yandex.ru</td><td>браузер</td><td>RuStore: «Алиса AI»</td></tr>
+  <tr><td>DeepSeek</td><td>chat.deepseek.com</td><td>deepseek.com/download</td><td>RuStore, Google Play</td></tr>
+  <tr><td>Qwen</td><td>chat.qwen.ai</td><td>браузер</td><td>браузер телефона</td></tr>
+</table>
+<div class="q" style="text-align:center">Учитель, у которого есть черновик и совесть, по-прежнему сильнее любого приложения. Совесть не входит в подписку, но она у вас уже есть.</div>
+<p class="closing">Что оказалось проще, чем вы думали?</p>
+</section>
+    <p class="foot">Пробел — старт/пауза · R — сброс · Ctrl+P — печать раздатки</p>
+  </main>
+</div>
+<script>
+(function(){
+  var KEY='mk-praktikum-v1';
+  var state={};
+  try{state=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){state={};}
+
+  /* timer */
+  var total=60*60, left=total, running=false, endAt=0, raf=null;
+  var clock=document.getElementById('clock');
+  var btnStart=document.getElementById('btn-start');
+  var btnReset=document.getElementById('btn-reset');
+  var blocks=[].slice.call(document.querySelectorAll('section.block'));
+  var navLinks=[].slice.call(document.querySelectorAll('nav.side a'));
+
+  /* badge = "10–18 мин": take the left number, not both */
+  function ranges(){
+    return blocks.map(function(b){
+      var t=b.querySelector('.badge').textContent.split(/[^0-9]+/)[0];
+      return {el:b,lo:parseInt(t,10)||0};
+    });
+  }
+  var RS=ranges();
+
+  function elapsed(){return total-left;}
+  function fmt(s){
+    s=Math.max(0,s);
+    var m=Math.floor(s/60), r=s%60;
+    return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;
+  }
+  function paint(){
+    clock.textContent=fmt(left);
+    clock.classList.toggle('warn', left<=600 && left>60);
+    clock.classList.toggle('over', left<=60);
+    var e=Math.floor((total-left)/60);
+    var cur=null;
+    RS.forEach(function(r,i){
+      var next=RS[i+1];
+      if(e>=r.lo && (!next || e<next.lo)){cur=r;}
+    });
+    if(!cur){cur=RS[RS.length-1];}
+    blocks.forEach(function(b){b.classList.toggle('now', b===cur.el);});
+    navLinks.forEach(function(a){a.classList.toggle('active', a.getAttribute('data-nav')===cur.el.id);});
+  }
+  function tick(){
+    if(!running) return;
+    var ms=endAt-Date.now();
+    left=Math.max(0,Math.ceil(ms/1000));
+    if(left<=0){running=false;btnStart.textContent='Старт';}
+    paint();
+    if(running) raf=setTimeout(tick,250);
+  }
+  function start(){
+    if(running) return;
+    if(left<=0){left=total;}
+    running=true;endAt=Date.now()+left*1000;
+    btnStart.textContent='Пауза';btnStart.classList.add('primary');
+    tick();
+  }
+  function pause(){
+    running=false;clearTimeout(raf);
+    btnStart.textContent='Старт';btnStart.classList.remove('primary');
+  }
+  function reset(){
+    pause();left=total;paint();
+  }
+  btnStart.addEventListener('click',function(){running?pause():start();});
+  document.getElementById('btn-reset').addEventListener('click',reset);
+  document.addEventListener('keydown',function(ev){
+    var t=ev.target.tagName;
+    if(t==='INPUT'||t==='TEXTAREA') return;
+    if(ev.code==='Space'){ev.preventDefault();running?pause():start();}
+    if(ev.key==='r'||ev.key==='R'||ev.key==='к'||ev.key==='К'){reset();}
+  });
+
+  /* copy */
+  [].slice.call(document.querySelectorAll('.copy')).forEach(function(b){
+    b.addEventListener('click',function(){
+      var pre=document.getElementById(b.getAttribute('data-target')).querySelector('.prompt-text');
+      var txt=pre.innerText;
+      function done(){
+        b.textContent='Скопировано';b.classList.add('done');
+        setTimeout(function(){b.textContent='Скопировать';b.classList.remove('done');},1600);
+      }
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(done,function(){fallback(txt,done);});
+      }else{fallback(txt,done);}
+    });
+  });
+  function fallback(txt,cb){
+    var ta=document.createElement('textarea');
+    ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');cb();}catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  /* checkboxes */
+  var boxes=[].slice.call(document.querySelectorAll('input[type=checkbox][data-k]'));
+  boxes.forEach(function(cb){
+    if(state[cb.getAttribute('data-k')]) cb.checked=true;
+    cb.addEventListener('change',function(){
+      state[cb.getAttribute('data-k')]=cb.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
+    });
+  });
+
+  paint();
+})();
+</script>
+</body>
+</html>
