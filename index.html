@@ -404,8 +404,8 @@
       </div>
       <div class="lab-ctrl">
         <label for="labBits">Бит на пиксель: <b id="labIv">4</b> бит</label>
-        <input type="range" id="labBits" min="1" max="24" step="1" value="4">
-        <div class="muted">Палитра: <b id="labNv">16</b> цветов (N = 2<sup>i</sup>)</div>
+        <input type="range" id="labBits" min="1" max="16" step="1" value="4">
+        <div class="muted">Палитра: <span id="labNword"><b>16</b> цветов</span> (N = 2<sup>i</sup>)</div>
       </div>
     </div>
 
@@ -431,12 +431,12 @@
     <div class="formula" id="labFormula">V = 64 · 64 · 4 = 16 384 бит = 2 048 Б = 2 КБ</div>
 
     <div class="lab-presets">
-      <span class="muted">Пресеты:</span>
-      <button class="btn ghost small" data-preset="1,64,64">Ч/б, 64×64</button>
+      <span class="muted">Типовые палитры:</span>
+      <button class="btn ghost small" data-preset="1,64,64">2 цвета, 64×64</button>
       <button class="btn ghost small" data-preset="4,64,64">16 цветов, 64×64</button>
       <button class="btn ghost small" data-preset="8,128,128">256 цветов, 128×128</button>
-      <button class="btn ghost small" data-preset="24,128,128">True Color, 128×128</button>
-      <button class="btn ghost small" data-preset="4,64,64">Сбросить (16 цветов, 64×64)</button>
+      <button class="btn ghost small" data-preset="16,128,128">65 536 цветов, 128×128</button>
+      <button class="btn ghost small" data-preset="4,64,64">Сбросить</button>
     </div>
 
     <div class="note">
@@ -866,6 +866,8 @@ $('show-sol').addEventListener('click', () => {
 const lab = { W:64, H:64, i:4, scene:null };
 const labCanvas = $('labCanvas'), labCtx = labCanvas.getContext('2d');
 const palCanvas = $('labPalette'), palCtx = palCanvas.getContext('2d');
+const smallCanvas = document.createElement('canvas');
+let palKey = '';
 
 // цветовая «сцена» (вейвлет-градиент) в координатах 0..1
 const STOPS = [[20,40,120],[20,120,220],[80,200,255],[255,255,230],[255,210,90],[250,140,50],[210,50,40],[60,10,60]];
@@ -917,7 +919,12 @@ function quantLevels(i){
   return levels;
 }
 
-function labBytes(){ return lab.W * lab.H * lab.i / 8; }
+function fmtWords(n, one, few, many){
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
 function fmtBytes(b){
   if (b >= 1024){
     const kb = b / 1024;
@@ -928,14 +935,15 @@ function fmtBytes(b){
 
 function labRender(){
   const W = lab.W, H = lab.H, i = lab.i;
-  labCanvas.width = W; labCanvas.height = H;
+  if (labCanvas.width !== W) labCanvas.width = W;
+  if (labCanvas.height !== H) labCanvas.height = H;
   const levels = quantLevels(i);
   const Nq = levels[0]*levels[1]*levels[2];
 
   // 1) уменьшение разрешения: сэмплируем идеальную сцену в сетку W×H
-  const small = document.createElement('canvas');
-  small.width = W; small.height = H;
-  const sctx = small.getContext('2d');
+  if (smallCanvas.width !== W) smallCanvas.width = W;
+  if (smallCanvas.height !== H) smallCanvas.height = H;
+  const sctx = smallCanvas.getContext('2d');
   sctx.imageSmoothingEnabled = true;
   sctx.drawImage(SCENE, 0, 0, W, H);
   // 2) квантование цвета до Nq оттенков
@@ -950,32 +958,35 @@ function labRender(){
   }
   sctx.putImageData(dst, 0, 0);
   labCtx.clearRect(0, 0, W, H);
-  labCtx.drawImage(small, 0, 0);
+  labCtx.drawImage(smallCanvas, 0, 0);
 
-  // палитра
-  const pw = palCanvas.width, ph = palCanvas.height;
-  palCtx.clearRect(0, 0, pw, ph);
-  const cols = Math.min(16, Math.ceil(Math.sqrt(Nq)));
-  const rows = Math.ceil(Nq / cols);
-  const cw = pw / cols, ch = ph / rows;
-  for (let idx = 0; idx < Nq; idx++){
-    const r = levels[0] > 1 ? Math.round((idx % levels[0]) * step[0]) : 0;
-    const g = levels[1] > 1 ? Math.round((Math.floor(idx / levels[0]) % levels[1]) * step[1]) : 0;
-    const b = levels[2] > 1 ? Math.round((Math.floor(idx / (levels[0]*levels[1])) % levels[2]) * step[2]) : 0;
-    palCtx.fillStyle = `rgb(${r},${g},${b})`;
-    palCtx.fillRect((idx % cols) * cw, Math.floor(idx / cols) * ch, Math.ceil(cw), Math.ceil(ch));
+  // палитра (перерисовываем только при смене i)
+  if (palKey !== i){
+    palKey = i;
+    const pw = palCanvas.width, ph = palCanvas.height;
+    palCtx.clearRect(0, 0, pw, ph);
+    const cols = Math.min(16, Math.ceil(Math.sqrt(Nq)));
+    const rows = Math.ceil(Nq / cols);
+    const cw = pw / cols, ch = ph / rows;
+    for (let idx = 0; idx < Nq; idx++){
+      const r = levels[0] > 1 ? Math.round((idx % levels[0]) * step[0]) : 0;
+      const g = levels[1] > 1 ? Math.round((Math.floor(idx / levels[0]) % levels[1]) * step[1]) : 0;
+      const b = levels[2] > 1 ? Math.round((Math.floor(idx / (levels[0]*levels[1])) % levels[2]) * step[2]) : 0;
+      palCtx.fillStyle = `rgb(${r},${g},${b})`;
+      palCtx.fillRect((idx % cols) * cw, Math.floor(idx / cols) * ch, Math.ceil(cw), Math.ceil(ch));
+    }
   }
 
   $('labWv').textContent = W; $('labHv').textContent = H; $('labIv').textContent = i;
-  $('labNv').textContent = nf(Nq);
-  $('labPalInfo').textContent = `2^${i} = ${nf(Nq)} цветов`;
-  $('labQuality').textContent = `${nf(W)} × ${nf(H)} = ${nf(W*H)} пикселей · ${nf(Nq)} цветов`;
+  $('labNword').innerHTML = `<b>${nf(Nq)}</b> ${fmtWords(Nq, 'цвет', 'цвета', 'цветов')}`;
+  $('labPalInfo').textContent = `2^${i} = ${nf(Nq)} ${fmtWords(Nq, 'цвет', 'цвета', 'цветов')}`;
+  $('labQuality').textContent = `${nf(W)} × ${nf(H)} = ${nf(W*H)} ${fmtWords(W*H, 'пиксель', 'пикселя', 'пикселей')} · ${nf(Nq)} ${fmtWords(Nq, 'цвет', 'цвета', 'цветов')}`;
   $('labPix').textContent = nf(W*H);
   $('labBit').textContent = i;
   const bits = W*H*i, bytes = bits/8;
   $('labBitsTotal').textContent = nf(bits) + ' бит';
-  $('labBytes').textContent = `${nf(bytes)} Б = ${fmtBytes(bytes)}`;
-  $('labFormula').innerHTML = `V = ${nf(W)} · ${nf(H)} · ${i} = ${nf(bits)} бит = ${nf(bytes)} Б = ${fmtBytes(bytes)}`;
+  $('labBytes').textContent = bytes >= 1024 ? `${nf(bytes)} Б = ${fmtBytes(bytes)}` : `${nf(bytes)} Б`;
+  $('labFormula').innerHTML = `V = ${nf(W)} · ${nf(H)} · ${i} = ${nf(bits)} бит` + (bytes >= 1024 ? ` = ${nf(bytes)} Б = ${fmtBytes(bytes)}` : ` = ${nf(bytes)} Б`);
 }
 
 function labFromInputs(){
@@ -1012,14 +1023,14 @@ const labTasksDef = [
     tip: `8 цветов — это 2³, i = 3 бита. Вес уменьшится ровно в 2 раза: было 2 КБ, станет 1 КБ.`
   },
   {
-    text: `Подбери размер так, чтобы при i = 8 бит картинка весила ровно 4 КБ (256 цветов).`,
-    ok: s => s.i === 8 && (s.W*s.H*8/8) === 4096,
-    tip: `При i = 8 бит V(Б) = W·H. 4 КБ = 4096 Б → нужно 4096 пикселей, например 64×64.`
+    text: `Подбери размер так, чтобы при i = 8 бит (256 цветов) картинка весила ровно 2 КБ.`,
+    ok: s => s.i === 8 && (s.W*s.H) === 2048 && s.W >= 16 && s.H >= 16,
+    tip: `При i = 8 бит 1 пиксель = 1 байт. 2 КБ = 2048 Б → нужно 2048 пикселей, например 32×64.`
   },
   {
-    text: `True Color (i = 24) и размер 128×128: добейся, чтобы V было ровно 48 КБ.`,
-    ok: s => s.i === 24 && s.W === 128 && s.H === 128,
-    tip: `V = 128·128·24 = 393 216 бит = 49 152 Б = 48 КБ.`
+    text: `Изображение 128×128 занимает ровно 32 КБ. Сколько в нём бит на пиксель?`,
+    ok: s => s.W === 128 && s.H === 128 && s.i === 16,
+    tip: `V = 32 КБ = 32 768 Б = 262 144 бит. Делим на 16 384 пикселя → 16 бит (65 536 цветов).`
   }
 ];
 function buildLabTasks(){
