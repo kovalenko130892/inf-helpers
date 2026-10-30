@@ -56,11 +56,19 @@
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
   @media(max-width:720px){.grid2{grid-template-columns:1fr}}
   /* calc steps */
-  .step{counter-increment:s; position:relative; padding-left:44px; margin:0 0 16px; min-height:34px}
+  .step{
+    counter-increment:s; position:relative; padding-left:62px; margin:0 0 16px;
+    min-height:28px; overflow:visible;
+  }
   .step::before{
     content:"Шаг " counter(s); position:absolute; left:0; top:0;
-    background:var(--accent); color:#fff; font-size:11px; font-weight:700;
-    border-radius:6px; padding:3px 6px; width:38px; text-align:center;
+    box-sizing:border-box; width:52px; white-space:nowrap;
+    background:var(--accent); color:#fff; font-size:11px; font-weight:700; line-height:18px;
+    border-radius:6px; padding:2px 0; text-align:center;
+  }
+  /* узкие экраны: бейдж «Шаг» ставим над строкой, чтобы не наезжать на поля */
+  @media(max-width:560px){
+    .step{padding-left:0; padding-top:26px}
   }
   .steps{counter-reset:s}
   .step label{display:block; font-weight:600; font-size:14.5px; margin-bottom:6px}
@@ -123,6 +131,40 @@
   .sheet h4{margin:0 0 4px; font-size:15px}
   .sheet p{margin:0; font-size:14px; color:#333}
   footer{text-align:center; color:var(--muted); font-size:13px; padding:10px 16px 30px}
+  /* лаборатория */
+  .lab-controls{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:14px 0}
+  .lab-ctrl label{display:block; font-weight:600; font-size:14.5px; margin-bottom:6px}
+  .lab-ctrl label b{color:var(--accent)}
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:99px;
+    background:linear-gradient(90deg,#2f6fed,#7c4dff); outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:#fff;
+    border:3px solid var(--accent); box-shadow:0 2px 6px rgba(20,40,100,.3); cursor:grab;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid var(--accent);
+  }
+  .lab-stage{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:8px}
+  @media(max-width:720px){.lab-stage{grid-template-columns:1fr}}
+  .lab-view h3{margin:0 0 8px; font-size:15px; color:#2b3550}
+  .lab-canvas{
+    width:100%; max-width:320px; aspect-ratio:1/1; display:block;
+    image-rendering:pixelated; background:#fff; border:1px solid var(--line); border-radius:10px;
+  }
+  .lab-palette{width:100%; max-width:320px; height:auto; display:block; border:1px solid var(--line); border-radius:10px}
+  .lab-stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:16px 0 10px}
+  .lab-stat{background:#f7f9ff; border:1px solid var(--line); border-radius:10px; padding:8px 12px; display:flex; flex-direction:column; gap:2px}
+  .lab-stat span{font-size:12.5px; color:var(--muted)}
+  .lab-stat b{font-size:16px; color:#1d2433}
+  .lab-presets{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px}
+  .lab-tasks{display:grid; gap:10px; margin-top:10px}
+  .lab-task{border:1px solid var(--line); border-radius:10px; padding:10px 14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fafbff}
+  .lab-task.ok{border-color:#b7e4c7; background:var(--ok-bg)}
+  .lab-task.err{border-color:#f3c0c0; background:var(--err-bg)}
+  .lab-task .lt-text{flex:1 1 260px; font-size:14.5px}
+  .lab-task .btn{padding:6px 14px; font-size:14px}
 </style>
 </head>
 <body>
@@ -135,6 +177,7 @@
 <nav>
   <button data-tab="theory" class="active">Теория</button>
   <button data-tab="calc">Пошаговый калькулятор</button>
+  <button data-tab="lab">Лаборатория</button>
   <button data-tab="trainer">Тренажёр</button>
   <button data-tab="sheet">Шпаргалка</button>
 </nav>
@@ -343,7 +386,69 @@
   </div>
 </section>
 
-<!-- ======================= ТРЕНАЖЁР ======================= -->
+<!-- ======================= ЛАБОРАТОРИЯ ======================= -->
+<section id="lab">
+  <div class="card">
+    <h2>Лаборатория: как палитра и число пикселей влияют на картинку</h2>
+    <p>Двигай бегунки и смотри: <b>палитра</b> отвечает за качество (цвета, плавность переходов),
+    а <b>число пикселей</b> — за чёткость и детализацию. Но и то, и другое увеличивает <b>вес файла</b>.</p>
+
+    <div class="lab-controls">
+      <div class="lab-ctrl">
+        <label for="labW">Ширина: <b id="labWv">64</b> px</label>
+        <input type="range" id="labW" min="8" max="256" step="8" value="64">
+      </div>
+      <div class="lab-ctrl">
+        <label for="labH">Высота: <b id="labHv">64</b> px</label>
+        <input type="range" id="labH" min="8" max="256" step="8" value="64">
+      </div>
+      <div class="lab-ctrl">
+        <label for="labBits">Бит на пиксель: <b id="labIv">4</b> бит</label>
+        <input type="range" id="labBits" min="1" max="24" step="1" value="4">
+        <div class="muted">Палитра: <b id="labNv">16</b> цветов (N = 2<sup>i</sup>)</div>
+      </div>
+    </div>
+
+    <div class="lab-stage">
+      <div class="lab-view">
+        <h3>Так картинку «видит» глаз</h3>
+        <canvas id="labCanvas" class="lab-canvas" width="256" height="256"></canvas>
+        <div class="muted" id="labQuality">—</div>
+      </div>
+      <div class="lab-view">
+        <h3>Цвета палитры (N = 2<sup>i</sup>)</h3>
+        <canvas id="labPalette" class="lab-palette" width="256" height="120"></canvas>
+        <div class="muted" id="labPalInfo">—</div>
+      </div>
+    </div>
+
+    <div class="lab-stats">
+      <div class="lab-stat"><span>Пиксели</span><b id="labPix">4 096</b></div>
+      <div class="lab-stat"><span>Бит на пиксель i</span><b id="labBit">4</b></div>
+      <div class="lab-stat"><span>Объём V = W·H·i</span><b id="labBitsTotal">16 384 бит</b></div>
+      <div class="lab-stat"><span>В байтах / КБ</span><b id="labBytes">2 048 Б = 2 КБ</b></div>
+    </div>
+    <div class="formula" id="labFormula">V = 64 · 64 · 4 = 16 384 бит = 2 048 Б = 2 КБ</div>
+
+    <div class="lab-presets">
+      <span class="muted">Пресеты:</span>
+      <button class="btn ghost small" data-preset="1,64,64">Ч/б, 64×64</button>
+      <button class="btn ghost small" data-preset="4,64,64">16 цветов, 64×64</button>
+      <button class="btn ghost small" data-preset="8,128,128">256 цветов, 128×128</button>
+      <button class="btn ghost small" data-preset="24,128,128">True Color, 128×128</button>
+      <button class="btn ghost small" data-preset="4,64,64">Сбросить (16 цветов, 64×64)</button>
+    </div>
+
+    <div class="note">
+      <b>Понаблюдай:</b> добавь 1 бит к палитре — цветов станет вдвое больше, а объём вырастет ровно в 2 раза
+      (при том же размере). Увеличь ширину в 2 раза — пикселей станет в 2 раза больше, объём тоже.
+    </div>
+
+    <h3 style="margin-top:18px">Мини-задания по лаборатории</h3>
+    <p class="muted">Настрой бегунки так, чтобы получить нужный результат, и нажми «Проверить».</p>
+    <div class="lab-tasks" id="labTasks"></div>
+  </div>
+</section>
 <section id="trainer">
   <div class="card">
     <div class="toolbar">
@@ -757,7 +862,190 @@ $('show-sol').addEventListener('click', () => {
   $('next-q').hidden = false;
 });
 
-$('tN').addEventListener('input', () => { if (isPow2(+$('tN').value)) $('tI-mark').textContent=''; });
+/* ============ лаборатория ============ */
+const lab = { W:64, H:64, i:4, scene:null };
+const labCanvas = $('labCanvas'), labCtx = labCanvas.getContext('2d');
+const palCanvas = $('labPalette'), palCtx = palCanvas.getContext('2d');
+
+// цветовая «сцена» (вейвлет-градиент) в координатах 0..1
+const STOPS = [[20,40,120],[20,120,220],[80,200,255],[255,255,230],[255,210,90],[250,140,50],[210,50,40],[60,10,60]];
+function rampColor(t){
+  const x = Math.min(0.999999, Math.max(0, t)) * (STOPS.length - 1);
+  const k = Math.floor(x), f = x - k;
+  const a = STOPS[k], b = STOPS[Math.min(k+1, STOPS.length-1)];
+  return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f];
+}
+// сцена: плавный градиент + концентрические круги (детализация) + «плашка» с сеткой
+function sceneColor(u, v){
+  let [r,g,b] = rampColor(u*0.62 + v*0.38);
+  // светлая «плашка» с тонкой сеткой — пропадёт при малом числе пикселей
+  if (u < 0.34 && v > 0.66){
+    const fx = (u / 0.34) * 7, fy = ((v - 0.66) / 0.34) * 7;
+    const grid = (fx % 1 < 0.14) || (fy % 1 < 0.14);
+    return grid ? [30,30,40] : [245,248,255];
+  }
+  // концентрические кольца вокруг центра — «плывут» при низком разрешении
+  const dx = u - 0.62, dy = v - 0.40;
+  const d2 = dx*dx + dy*dy;
+  const band = Math.floor(d2 * 260) % 2;
+  if (band === 0 && d2 < 0.09){
+    r = 255; g = 255; b = 255;
+  }
+  return [r|0, g|0, b|0];
+}
+// создаём «идеальную» картинку 256×256, затем берём её при разрешении W×H
+const SCENE = document.createElement('canvas');
+SCENE.width = 256; SCENE.height = 256;
+(function buildScene(){
+  const x = SCENE.getContext('2d');
+  const img = x.createImageData(256, 256);
+  for (let py = 0; py < 256; py++){
+    for (let px = 0; px < 256; px++){
+      const c = sceneColor((px + 0.5) / 256, (py + 0.5) / 256);
+      const o = (py * 256 + px) * 4;
+      img.data[o] = c[0]; img.data[o+1] = c[1]; img.data[o+2] = c[2]; img.data[o+3] = 255;
+    }
+  }
+  x.putImageData(img, 0, 0);
+})();
+
+// распределение i бит по каналам (зелёный первым — к нему глаз чувствительнее)
+function quantLevels(i){
+  const levels = [1,1,1];
+  const order = [1,0,2];
+  for (let k = 0; k < i; k++) levels[order[k % 3]] *= 2;
+  return levels;
+}
+
+function labBytes(){ return lab.W * lab.H * lab.i / 8; }
+function fmtBytes(b){
+  if (b >= 1024){
+    const kb = b / 1024;
+    return (Number.isInteger(kb) ? nf(kb) : (Math.round(kb*10)/10).toString().replace('.', ',')) + ' КБ';
+  }
+  return nf(b) + ' Б';
+}
+
+function labRender(){
+  const W = lab.W, H = lab.H, i = lab.i;
+  labCanvas.width = W; labCanvas.height = H;
+  const levels = quantLevels(i);
+  const Nq = levels[0]*levels[1]*levels[2];
+
+  // 1) уменьшение разрешения: сэмплируем идеальную сцену в сетку W×H
+  const small = document.createElement('canvas');
+  small.width = W; small.height = H;
+  const sctx = small.getContext('2d');
+  sctx.imageSmoothingEnabled = true;
+  sctx.drawImage(SCENE, 0, 0, W, H);
+  // 2) квантование цвета до Nq оттенков
+  const src = sctx.getImageData(0, 0, W, H);
+  const dst = sctx.createImageData(W, H);
+  const step = levels.map(l => l > 1 ? 255/(l-1) : 0);
+  for (let p = 0; p < src.data.length; p += 4){
+    dst.data[p]   = levels[0] > 1 ? Math.round(Math.round(src.data[p]   / step[0]) * step[0]) : 0;
+    dst.data[p+1] = levels[1] > 1 ? Math.round(Math.round(src.data[p+1] / step[1]) * step[1]) : 0;
+    dst.data[p+2] = levels[2] > 1 ? Math.round(Math.round(src.data[p+2] / step[2]) * step[2]) : 0;
+    dst.data[p+3] = 255;
+  }
+  sctx.putImageData(dst, 0, 0);
+  labCtx.clearRect(0, 0, W, H);
+  labCtx.drawImage(small, 0, 0);
+
+  // палитра
+  const pw = palCanvas.width, ph = palCanvas.height;
+  palCtx.clearRect(0, 0, pw, ph);
+  const cols = Math.min(16, Math.ceil(Math.sqrt(Nq)));
+  const rows = Math.ceil(Nq / cols);
+  const cw = pw / cols, ch = ph / rows;
+  for (let idx = 0; idx < Nq; idx++){
+    const r = levels[0] > 1 ? Math.round((idx % levels[0]) * step[0]) : 0;
+    const g = levels[1] > 1 ? Math.round((Math.floor(idx / levels[0]) % levels[1]) * step[1]) : 0;
+    const b = levels[2] > 1 ? Math.round((Math.floor(idx / (levels[0]*levels[1])) % levels[2]) * step[2]) : 0;
+    palCtx.fillStyle = `rgb(${r},${g},${b})`;
+    palCtx.fillRect((idx % cols) * cw, Math.floor(idx / cols) * ch, Math.ceil(cw), Math.ceil(ch));
+  }
+
+  $('labWv').textContent = W; $('labHv').textContent = H; $('labIv').textContent = i;
+  $('labNv').textContent = nf(Nq);
+  $('labPalInfo').textContent = `2^${i} = ${nf(Nq)} цветов`;
+  $('labQuality').textContent = `${nf(W)} × ${nf(H)} = ${nf(W*H)} пикселей · ${nf(Nq)} цветов`;
+  $('labPix').textContent = nf(W*H);
+  $('labBit').textContent = i;
+  const bits = W*H*i, bytes = bits/8;
+  $('labBitsTotal').textContent = nf(bits) + ' бит';
+  $('labBytes').textContent = `${nf(bytes)} Б = ${fmtBytes(bytes)}`;
+  $('labFormula').innerHTML = `V = ${nf(W)} · ${nf(H)} · ${i} = ${nf(bits)} бит = ${nf(bytes)} Б = ${fmtBytes(bytes)}`;
+}
+
+function labFromInputs(){
+  lab.W = +$('labW').value; lab.H = +$('labH').value; lab.i = +$('labBits').value;
+  labRender();
+}
+
+$('labW').addEventListener('input', labFromInputs);
+$('labH').addEventListener('input', labFromInputs);
+$('labBits').addEventListener('input', labFromInputs);
+document.querySelectorAll('[data-preset]').forEach(b => {
+  b.addEventListener('click', () => {
+    const [i, w, h] = b.dataset.preset.split(',').map(Number);
+    $('labBits').value = i; $('labW').value = w; $('labH').value = h;
+    labFromInputs();
+  });
+});
+
+/* мини-задания по лаборатории */
+const labTasksDef = [
+  {
+    text: `Сделай чёрно-белую картинку 64×64 (ровно 2 цвета).`,
+    ok: s => s.i === 1 && s.W === 64 && s.H === 64,
+    tip: `1 бит на пиксель даёт N = 2¹ = 2 цвета. Поставь i = 1 и размер 64×64.`
+  },
+  {
+    text: `Сделай картинку в 256 цветов на 64×64 пикселях. Подсказка: 256 = 2⁸.`,
+    ok: s => s.i === 8 && s.W === 64 && s.H === 64,
+    tip: `256 цветов — это N = 2⁸, значит i = 8 бит. Размер 64×64.`
+  },
+  {
+    text: `Не меняя площадь (64×64), убери половину бит палитры: получи 8 цветов. На сколько изменился вес?`,
+    ok: s => s.i === 3 && s.W === 64 && s.H === 64,
+    tip: `8 цветов — это 2³, i = 3 бита. Вес уменьшится ровно в 2 раза: было 2 КБ, станет 1 КБ.`
+  },
+  {
+    text: `Подбери размер так, чтобы при i = 8 бит картинка весила ровно 4 КБ (256 цветов).`,
+    ok: s => s.i === 8 && (s.W*s.H*8/8) === 4096,
+    tip: `При i = 8 бит V(Б) = W·H. 4 КБ = 4096 Б → нужно 4096 пикселей, например 64×64.`
+  },
+  {
+    text: `True Color (i = 24) и размер 128×128: добейся, чтобы V было ровно 48 КБ.`,
+    ok: s => s.i === 24 && s.W === 128 && s.H === 128,
+    tip: `V = 128·128·24 = 393 216 бит = 49 152 Б = 48 КБ.`
+  }
+];
+function buildLabTasks(){
+  const box = $('labTasks');
+  box.innerHTML = '';
+  labTasksDef.forEach((t, idx) => {
+    const row = document.createElement('div');
+    row.className = 'lab-task';
+    row.innerHTML = `<div class="lt-text"><b>${idx+1}.</b> ${t.text}</div>
+      <button class="btn small" type="button">Проверить</button>
+      <span class="mark"></span>`;
+    row.querySelector('button').addEventListener('click', () => {
+      const okNow = t.ok({ W: lab.W, H: lab.H, i: lab.i });
+      row.classList.toggle('ok', okNow);
+      row.classList.toggle('err', !okNow);
+      setMark(row.querySelector('.mark'), okNow);
+      let tip = row.querySelector('.lt-tip');
+      if (!tip){ tip = document.createElement('div'); tip.className = 'lt-tip muted'; tip.style.flexBasis = '100%'; row.appendChild(tip); }
+      tip.textContent = okNow ? 'Верно! Посмотри, как изменились картинка и объём.' : 'Пока нет. ' + t.tip;
+    });
+    box.appendChild(row);
+  });
+}
+
+buildLabTasks();
+labRender();
 $('gMode').addEventListener('change', () => {
   const mode = $('gMode').value;
   $('gN').disabled = mode === 'I';
