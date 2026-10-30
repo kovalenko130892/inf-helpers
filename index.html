@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Информационный объём текста и изображения — тренажёр</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1d2433; --muted:#6b7488;
+    --accent:#2f6fed; --accent-2:#7c4dff; --ok:#1f9d55; --ok-bg:#e8f7ee;
+    --err:#d93b3b; --err-bg:#fdecec; --line:#e3e7f0; --warn:#f0a020;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55; font-size:16px;
+  }
+  header{
+    background:linear-gradient(135deg,#2f6fed,#7c4dff); color:#fff;
+    padding:28px 20px 22px; text-align:center;
+  }
+  header h1{margin:0 0 6px; font-size:clamp(20px,3vw,30px); line-height:1.25}
+  header p{margin:0; opacity:.9; font-size:14px}
+  nav{
+    position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid var(--line);
+    display:flex; gap:6px; justify-content:center; flex-wrap:wrap; padding:8px 10px;
+    box-shadow:0 2px 8px rgba(20,30,60,.06);
+  }
+  nav button{
+    border:1px solid var(--line); background:#fff; color:var(--ink); padding:7px 14px;
+    border-radius:999px; cursor:pointer; font-size:14px; font-weight:600; transition:.15s;
+  }
+  nav button:hover{border-color:var(--accent); color:var(--accent)}
+  nav button.active{background:var(--accent); border-color:var(--accent); color:#fff}
+  main{max-width:980px; margin:0 auto; padding:22px 16px 70px}
+  section{display:none}
+  section.show{display:block; animation:fade .25s ease}
+  @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:18px 20px; margin:0 0 16px; box-shadow:0 2px 10px rgba(20,30,60,.04);
+  }
+  .card h2{margin:0 0 12px; font-size:19px}
+  .card h3{margin:16px 0 8px; font-size:16px; color:#2b3550}
+  .formula{
+    background:#eef3ff; border-left:4px solid var(--accent); border-radius:8px;
+    padding:10px 14px; margin:10px 0; font-family:"Cambria Math",Georgia,serif; font-size:17px;
+  }
+  table{border-collapse:collapse; width:100%; margin:10px 0; font-size:14.5px}
+  th,td{border:1px solid var(--line); padding:7px 10px; text-align:left}
+  th{background:#f0f3fa}
+  code{background:#eef1f7; padding:1px 6px; border-radius:5px; font-size:.93em}
+  .muted{color:var(--muted); font-size:14px}
+  .note{background:#fff8e6; border-left:4px solid var(--warn); border-radius:8px; padding:10px 14px; margin:10px 0; font-size:14.5px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr}}
+  /* calc steps */
+  .step{counter-increment:s; position:relative; padding-left:44px; margin:0 0 16px; min-height:34px}
+  .step::before{
+    content:"Шаг " counter(s); position:absolute; left:0; top:0;
+    background:var(--accent); color:#fff; font-size:11px; font-weight:700;
+    border-radius:6px; padding:3px 6px; width:38px; text-align:center;
+  }
+  .steps{counter-reset:s}
+  .step label{display:block; font-weight:600; font-size:14.5px; margin-bottom:6px}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  input[type=number], input[type=text]{
+    font:inherit; padding:7px 10px; border:1.5px solid var(--line); border-radius:8px;
+    width:150px; background:#fff;
+  }
+  input:focus{outline:none; border-color:var(--accent)}
+  select{font:inherit; padding:7px 10px; border:1.5px solid var(--line); border-radius:8px; background:#fff}
+  .btn{
+    border:none; border-radius:9px; padding:9px 18px; font:inherit; font-weight:700;
+    cursor:pointer; background:var(--accent); color:#fff; transition:.15s;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.45; cursor:not-allowed}
+  .btn.ghost{background:#fff; color:var(--accent); border:1.5px solid var(--accent)}
+  .btn.small{padding:6px 12px; font-size:14px}
+  .mark{font-size:18px; font-weight:700; margin-left:4px}
+  .mark.ok{color:var(--ok)}
+  .mark.err{color:var(--err)}
+  .hint{font-size:13.5px; color:var(--muted); margin-top:6px}
+  .result{
+    margin-top:12px; padding:10px 14px; border-radius:10px; font-size:14.5px; display:none;
+  }
+  .result.ok{display:block; background:var(--ok-bg); color:#12663a; border:1px solid #b7e4c7}
+  .result.err{display:block; background:var(--err-bg); color:#8e2020; border:1px solid #f3c0c0}
+  /* trainer */
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
+  .chips{display:flex; gap:6px; flex-wrap:wrap}
+  .chip{border:1.5px solid var(--line); background:#fff; border-radius:999px; padding:5px 12px; cursor:pointer; font-size:14px; font-weight:600}
+  .chip.active{background:#eef3ff; border-color:var(--accent); color:var(--accent)}
+  .progress{height:8px; background:#e6eaf4; border-radius:99px; overflow:hidden; margin:12px 0 4px}
+  .progress > div{height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .3s}
+  .stats{display:flex; gap:16px; font-size:14px; color:var(--muted); flex-wrap:wrap}
+  .stats b{color:var(--ink)}
+  .q-text{font-size:17px; margin:6px 0 14px}
+  .q-text b{color:var(--accent)}
+  .options{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  @media(max-width:640px){.options{grid-template-columns:1fr}}
+  .opt{
+    text-align:left; border:1.5px solid var(--line); background:#fff; border-radius:10px;
+    padding:11px 14px; font:inherit; font-size:15.5px; cursor:pointer; transition:.15s;
+  }
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{background:var(--ok-bg); border-color:var(--ok); color:#12663a; font-weight:700}
+  .opt.wrong{background:var(--err-bg); border-color:var(--err); color:#8e2020}
+  .opt:disabled{cursor:default}
+  .solution{margin-top:14px; background:#f7f9ff; border:1px dashed #c6d2f0; border-radius:10px; padding:12px 14px; font-size:14.5px; display:none}
+  .solution.show{display:block}
+  .solution h4{margin:0 0 6px; font-size:14.5px; color:var(--accent)}
+  .solution ol{margin:6px 0 0; padding-left:20px}
+  .solution li{margin:3px 0}
+  .actions{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap}
+  .badge{display:inline-block; font-size:12px; font-weight:700; padding:2px 9px; border-radius:999px; background:#eef3ff; color:var(--accent)}
+  .badge.g{background:#f3ecff; color:#6a3bd6}
+  .pixel{image-rendering:pixelated; border:1px solid var(--line); border-radius:6px; background:#fff}
+  .sheet{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; margin-top:10px}
+  .sheet div{border:1px solid var(--line); border-radius:10px; padding:10px 14px; background:#fafbff}
+  .sheet h4{margin:0 0 4px; font-size:15px}
+  .sheet p{margin:0; font-size:14px; color:#333}
+  footer{text-align:center; color:var(--muted); font-size:13px; padding:10px 16px 30px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Измерение информационного объёма текста и графического изображения</h1>
+  <p>Интерактивное пособие-тренажёр · информатика · подготовка к ОГЭ и ЕГЭ</p>
+</header>
+
+<nav>
+  <button data-tab="theory" class="active">Теория</button>
+  <button data-tab="calc">Пошаговый калькулятор</button>
+  <button data-tab="trainer">Тренажёр</button>
+  <button data-tab="sheet">Шпаргалка</button>
+</nav>
+
+<main>
+
+<!-- ======================= ТЕОРИЯ ======================= -->
+<section id="theory" class="show">
+  <div class="card">
+    <h2>1. Зачем нужны биты</h2>
+    <p>Компьютер хранит и передаёт всё в виде нулей и единиц. Один бит — это один двоичный знак (0 или 1).
+    Он может принимать <b>два</b> значения. Два бита — <b>четыре</b> значения (00, 01, 10, 11), три бита — восемь.</p>
+    <div class="formula">Количество различных сообщений (комбинаций) из <i>i</i> бит: &nbsp; N = 2<sup>i</sup></div>
+    <p class="muted">Обратная задача — сколько бит нужно, чтобы закодировать N вариантов: i = log<sub>2</sub>N (округляем до целого вверх).</p>
+    <table>
+      <tr><th>Бит</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr>
+      <tr><td>Вариантов (2<sup>n</sup>)</td><td>2</td><td>4</td><td>8</td><td>16</td><td>32</td><td>64</td><td>128</td><td>256</td></tr>
+    </table>
+    <p><b>1 байт = 8 бит</b> — байт кодирует один из 256 символов. Это минимальная единица ровно потому, что хватает для русских и латинских букв, цифр, знаков препинания.</p>
+    <table>
+      <tr><th>Единица</th><th>Связь</th><th>Пример</th></tr>
+      <tr><td>байт (Б)</td><td>8 бит</td><td>одна буква (в 8-битных кодировках)</td></tr>
+      <tr><td>КБ</td><td>2<sup>10</sup> Б = 1024 Б</td><td>страница текста</td></tr>
+      <tr><td>МБ</td><td>2<sup>20</sup> Б = 1024 КБ</td><td>фотография</td></tr>
+      <tr><td>ГБ</td><td>2<sup>30</sup> Б = 1024 МБ</td><td>фильм</td></tr>
+    </table>
+    <div class="note"><b>Важно:</b> в информатике 1 КБ = 1024 Б (степень двойки), а не 1000. При переводе «в биты» умножай на 8, «из бит» — делить на 8.</div>
+  </div>
+
+  <div class="card">
+    <h2>2. Информационный объём текста</h2>
+    <p>Текст в компьютере — это последовательность символов, и <b>каждый символ кодируется одинаковым числом бит</b> (если не сказано иное).
+    Поэтому объём текста считается умножением:</p>
+    <div class="formula">V = <i>K</i> · <i>i</i>, где <i>K</i> — число символов, <i>i</i> — число бит на один символ</div>
+    <h3>Как найти число символов</h3>
+    <ul>
+      <li>если символьное число дано в задаче — берём его напрямую;</li>
+      <li>если нужно получить K из мощности алфавита: <i>N</i> = 2<sup>i</sup> →  2<sup>4</sup>=16 → 4 бита, 2<sup>5</sup>=32 → 5 бит, 2<sup>6</sup>=64 → 6 бит, 2<sup>7</sup>=128 → 7 бит, 2<sup>8</sup>=256 → 8 бит;</li>
+      <li>количество символов на странице = строки × символы в строке.</li>
+    </ul>
+    <h3>Частые ловушки</h3>
+    <ul>
+      <li><b>пробелы и знаки препинания — тоже символы!</b> «Привет, мир!» — не 10, а 12 символов;</li>
+      <li>если в ответе просят «в байтах» — не забудь разделить биты на 8;</li>
+      <li>мощность алфавита и число символов в тексте — разные вещи. N — сколько разных знаков может встретиться, K — сколько знаков реально напечатано.</li>
+    </ul>
+    <h3>Пример</h3>
+    <p>Текст из 200 символов записан алфавитом мощностью 64 символа. Объём?</p>
+    <p class="muted">2<sup>6</sup> = 64 → i = 6 бит. V = 200 · 6 = 1200 бит = 150 байт.</p>
+  </div>
+
+  <div class="card">
+    <h2>3. Информационный объём изображения (растрового)</h2>
+    <p>Растровое изображение — прямоугольная <b>сетка пикселей</b>. У каждого пикселя свой цвет. Информация о цвете хранится в виде кода из фиксированного числа бит — это <b>глубина цвета</b> (бит на пиксель).</p>
+    <div class="formula">V = <i>W</i> · <i>H</i> · <i>i</i> (пиксели × бит на пиксель)</div>
+    <h3>Где искать i — глубину цвета</h3>
+    <p>Если сказано «в изображении 256 цветов», то по формуле N = 2<sup>i</sup> получаем i = 8 бит. Таблица для популярных палитр:</p>
+    <table>
+      <tr><th>Цветов</th><th>2</th><th>4</th><th>16</th><th>256</th><th>65 536</th><th>16 777 216</th></tr>
+      <tr><td>Глубина (бит)</td><td>1</td><td>2</td><td>4</td><td>8</td><td>16</td><td>24 (True Color)</td></tr>
+    </table>
+    <h3>Разрешение экрана</h3>
+    <p>«Изображение 800 × 600» — это 800 пикселей по ширине и 600 по высоте, всего 480 000 пикселей.
+    Для экрана объём видеопамяти одного кадра: V = W·H·i.</p>
+    <h3>Особые случаи</h3>
+    <ul>
+      <li>чёрно-белое изображение без оттенков — i = 1 бит на пиксель;</li>
+      <li>в задаче нужно «в Кбайтах» — делим на 8 (получаем байты), затем на 1024;</li>
+      <li>число цветов удваивается → глубина цвета растёт на 1 бит, объём — в 2 раза.</li>
+    </ul>
+    <h3>Пример</h3>
+    <p>Изображение 640 × 480 в 256 цветах. Объём?</p>
+    <p class="muted">i = 8 бит = 1 байт. V = 640 · 480 · 1 = 307 200 байт = 300 КБ.</p>
+  </div>
+
+  <div class="card">
+    <h2>4. Сравнение и связи</h2>
+    <div class="grid2">
+      <div>
+        <h3>Текст</h3>
+        <div class="formula">V = K · i<sub>симв</sub></div>
+        <p class="muted">i<sub>симв</sub> — бит на символ, K — символов.</p>
+      </div>
+      <div>
+        <h3>Изображение</h3>
+        <div class="formula">V = W · H · i<sub>пикс</sub></div>
+        <p class="muted">i<sub>пикс</sub> — бит на пиксель, W·H — пикселей.</p>
+      </div>
+    </div>
+    <p>Обе формулы — одно и то же правило: <b>объём = количество элементов × бит на элемент</b>. Меняются только «элементы».</p>
+    <h3>Почему везде степени двойки</h3>
+    <p>Любой ответ удобно приводить к степеням двойки: 640·480 = 2<sup>7</sup>·5·2<sup>5</sup>·15 = 307 200 = 300 · 1024. Так проще считать без калькулятора: 2<sup>8</sup> = 256, 2<sup>10</sup> = 1024.</p>
+  </div>
+</section>
+
+<!-- ======================= КАЛЬКУЛЯТОР ======================= -->
+<section id="calc">
+  <div class="card">
+    <h2>Пошаговый калькулятор: текст</h2>
+    <p class="muted">Введи данные в шаги и проверь каждое вычисление. Задачи могут давать пары «K и i» или «N и K».</p>
+    <div class="steps">
+      <div class="step">
+        <label>Мощность алфавита N (сколько разных символов)</label>
+        <div class="row">
+          <input type="number" id="tN" value="64" min="2" step="1">
+          <span class="muted">→</span>
+          <input type="number" id="tI" placeholder="i = ?" min="1" step="1">
+          <span class="muted">бит на символ</span>
+          <span class="mark" id="tI-mark"></span>
+        </div>
+        <div class="hint">Найди степень двойки: N = 2<sup>i</sup>. Например, 64 = 2<sup>6</sup> → 6.</div>
+      </div>
+      <div class="step">
+        <label>Количество символов K</label>
+        <div class="row">
+          <input type="number" id="tK" value="200" min="0" step="1">
+          <span class="muted">символов</span>
+        </div>
+        <div class="hint">Помни: пробелы и знаки препинания считаются.</div>
+      </div>
+      <div class="step">
+        <label>Объём текста V (в битах)</label>
+        <div class="row">
+          <input type="number" id="tV" placeholder="V = ?" min="0" step="1">
+          <span class="muted">бит</span>
+          <span class="mark" id="tV-mark"></span>
+        </div>
+        <div class="hint">V = K · i.</div>
+      </div>
+      <div class="step">
+        <label>Переведи в байты и КБ (заполни, если просят)</label>
+        <div class="row">
+          <input type="number" id="tB" placeholder="байт" min="0" step="0.0001">
+          <span class="muted">Б</span>
+          <span class="mark" id="tB-mark"></span>
+          <input type="number" id="tKB" placeholder="КБ" min="0" step="0.0001">
+          <span class="muted">КБ</span>
+          <span class="mark" id="tKB-mark"></span>
+        </div>
+        <div class="hint">1 байт = 8 бит; 1 КБ = 1024 байта.</div>
+      </div>
+    </div>
+    <div class="result" id="t-result"></div>
+    <div class="actions">
+      <button class="btn" id="t-check">Проверить</button>
+      <button class="btn ghost small" id="t-new">Другая задача</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Пошаговый калькулятор: изображение</h2>
+    <p class="muted">Заполняй по шагам. Подсказка: если дано число цветов, сначала найди глубину цвета.</p>
+    <div class="steps">
+      <div class="step">
+        <label>Размер: ширина × высота</label>
+        <div class="row">
+          <input type="number" id="gW" value="640" min="1" step="1">
+          <span class="muted">×</span>
+          <input type="number" id="gH" value="480" min="1" step="1">
+          <span class="muted">пикселей</span>
+          <span class="mark" id="gPix-mark"></span>
+        </div>
+        <div class="hint">Всего пикселей = W · H.</div>
+      </div>
+      <div class="step">
+        <label>Число цветов N или глубина цвета i</label>
+        <div class="row">
+          <select id="gMode">
+            <option value="N">Дано число цветов N</option>
+            <option value="I">Дана глубина цвета i</option>
+          </select>
+          <input type="number" id="gN" value="256" min="2" step="1">
+          <span class="muted">→ i =</span>
+          <input type="number" id="gI" placeholder="i" min="1" step="1">
+          <span class="muted">бит</span>
+          <span class="mark" id="gI-mark"></span>
+        </div>
+        <div class="hint">N = 2<sup>i</sup>. Примеры: 16 → 4, 256 → 8, 16 777 216 → 24.</div>
+      </div>
+      <div class="step">
+        <label>Объём V в битах</label>
+        <div class="row">
+          <input type="number" id="gV" placeholder="V = ?" min="0" step="1">
+          <span class="muted">бит</span>
+          <span class="mark" id="gV-mark"></span>
+        </div>
+        <div class="hint">V = W · H · i.</div>
+      </div>
+      <div class="step">
+        <label>Приведи к байтам / КБ</label>
+        <div class="row">
+          <input type="number" id="gB" placeholder="байт" min="0" step="0.0001">
+          <span class="muted">Б</span>
+          <span class="mark" id="gB-mark"></span>
+          <input type="number" id="gKB" placeholder="КБ" min="0" step="0.0001">
+          <span class="muted">КБ</span>
+          <span class="mark" id="gKB-mark"></span>
+        </div>
+      </div>
+    </div>
+    <div class="result" id="g-result"></div>
+    <div class="actions">
+      <button class="btn" id="g-check">Проверить</button>
+      <button class="btn ghost small" id="g-new">Другая задача</button>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= ТРЕНАЖЁР ======================= -->
+<section id="trainer">
+  <div class="card">
+    <div class="toolbar">
+      <div>
+        <h2 style="margin:0 0 6px">Тренажёр</h2>
+        <div class="chips">
+          <button class="chip active" data-mode="all">Все</button>
+          <button class="chip" data-mode="text">Текст</button>
+          <button class="chip" data-mode="image">Изображение</button>
+        </div>
+      </div>
+      <button class="btn ghost small" id="new-q">Новое задание</button>
+    </div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="stats">
+      <span>Задание: <b id="qnum">1</b></span>
+      <span>Верно: <b id="right">0</b></span>
+      <span>Ошибок: <b id="wrong">0</b></span>
+      <span>Серия: <b id="streak">0</b></span>
+    </div>
+  </div>
+
+  <div class="card" id="q-card">
+    <div class="q-text" id="q-text">Загрузка…</div>
+    <div class="options" id="options"></div>
+    <div class="solution" id="solution">
+      <h4>Решение</h4>
+      <div id="sol-body"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="show-sol" hidden>Показать решение</button>
+      <button class="btn" id="next-q" hidden>Следующее задание →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= ШПАРГАЛКА ======================= -->
+<section id="sheet">
+  <div class="card">
+    <h2>Шпаргалка — всё на одной странице</h2>
+  </div>
+  <div class="sheet">
+    <div>
+      <h4>Основные формулы</h4>
+      <p>N = 2<sup>i</sup></p>
+      <p>V<sub>текст</sub> = K · i</p>
+      <p>V<sub>картинка</sub> = W · H · i</p>
+      <p>K = строки × символов в строке</p>
+    </div>
+    <div>
+      <h4>Единицы</h4>
+      <p>1 байт = 8 бит</p>
+      <p>1 КБ = 1024 Б</p>
+      <p>1 МБ = 1024 КБ</p>
+      <p>1 ГБ = 1024 МБ</p>
+    </div>
+    <div>
+      <h4>Степени двойки</h4>
+      <p>2<sup>4</sup>=16 &nbsp; 2<sup>6</sup>=64 &nbsp; 2<sup>8</sup>=256</p>
+      <p>2<sup>10</sup>=1024 &nbsp; 2<sup>16</sup>=65 536</p>
+      <p>2<sup>20</sup>=1 048 576</p>
+      <p>2<sup>24</sup>=16 777 216</p>
+    </div>
+    <div>
+      <h4>Глубина цвета</h4>
+      <p>Ч/б (2 цвета) — 1 бит</p>
+      <p>4 цвета — 2 бита, 16 — 4 бита</p>
+      <p>256 — 8 бит (1 байт)</p>
+      <p>True Color — 24 бита</p>
+    </div>
+    <div>
+      <h4>Порядок решения</h4>
+      <p>1. Найди i (по N через степень двойки).</p>
+      <p>2. Найди K (символов) или W·H (пикселей).</p>
+      <p>3. Перемножь.</p>
+      <p>4. Переведи в нужные единицы.</p>
+    </div>
+    <div>
+      <h4>Ловушки</h4>
+      <p>Пробелы и запятые — символы.</p>
+      <p>КБ — 1024, а не 1000.</p>
+      <p>В 2 раза больше цветов → +1 бит.</p>
+      <p>Всегда смотри, в каких единицах ответ.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>Пособие к уроку информатики · создано для отработки формул V = K·i и V = W·H·i</footer>
+
+<script>
+/* ============ вкладки ============ */
+document.querySelectorAll('nav button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('section').forEach(s => s.classList.remove('show'));
+    document.getElementById(b.dataset.tab).classList.add('show');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+});
+
+/* ============ утилиты ============ */
+const $ = id => document.getElementById(id);
+const log2 = n => Math.round(Math.log2(n));
+const isPow2 = n => n > 0 && (n & (n-1)) === 0 && n >= 1;
+const nf = v => new Intl.NumberFormat('ru-RU').format(v);
+const near = (a, b) => Math.abs(a-b) <= Math.max(1e-9, Math.abs(b)*1e-6);
+
+function setMark(el, ok){
+  el.textContent = ok ? '✓' : '✗';
+  el.className = 'mark ' + (ok ? 'ok' : 'err');
+  return ok;
+}
+function clearMark(el){ el.textContent=''; el.className='mark'; }
+
+/* ============ калькулятор: текст ============ */
+const tFields = ['tN','tI','tK','tV','tB','tKB'];
+function tState(){
+  return {
+    N: +$('tN').value || 0,
+    i: +$('tI').value,
+    K: +$('tK').value,
+    V: +$('tV').value,
+    B: +$('tB').value,
+    KB: +$('tKB').value
+  };
+}
+function tCheck(){
+  const s = tState();
+  const res = $('t-result');
+  let ok = 0, total = 0;
+  const err = [];
+
+  const iOk = isPow2(s.N) && s.i === log2(s.N);
+  if (s.i) { total++; setMark($('tI-mark'), iOk); if (iOk) ok++; else err.push(`i: при N = ${s.N} нужно i = ${isPow2(s.N) ? log2(s.N) : '?'} (${isPow2(s.N)?'потому что 2^i = N':'N не степень двойки'})`); }
+  else clearMark($('tI-mark'));
+
+  if (s.V) {
+    total++;
+    const vOk = near(s.V, s.K * s.i);
+    setMark($('tV-mark'), vOk);
+    if (vOk) ok++; else err.push(`V = K · i = ${s.K} · ${s.i} = ${nf(s.K*s.i)} бит`);
+  } else clearMark($('tV-mark'));
+
+  if (s.B) {
+    total++;
+    const bOk = near(s.B, s.V/8);
+    setMark($('tB-mark'), bOk);
+    if (bOk) ok++; else err.push(`байты = V / 8 = ${s.V}/8 = ${nf(s.V/8)} Б`);
+  } else clearMark($('tB-mark'));
+
+  if (s.KB) {
+    total++;
+    const kbOk = near(s.KB, s.V/8/1024);
+    setMark($('tKB-mark'), kbOk);
+    if (kbOk) ok++; else err.push(`КБ = V / 8 / 1024 = ${s.V/8/1024} КБ`);
+  } else clearMark($('tKB-mark'));
+
+  res.className = 'result ' + (err.length ? 'err' : 'ok');
+  if (!total) res.textContent = 'Заполни хотя бы одну проверяемую ячейку: i, V, байты или КБ.';
+  else if (!err.length) res.textContent = `Всё верно! Проверено ${ok} из ${total} полей.`;
+  else res.innerHTML = `Проверь: <ul style="margin:6px 0 0;padding-left:18px">` + err.map(e=>`<li>${e}</li>`).join('') + `</ul>`;
+}
+
+function tNew(){
+  // случайная задача, данные подставляются в поля
+  const pairs = [[16,120],[32,80],[64,300],[128,150],[256,500],[8,60]];
+  const [N, K] = pairs[Math.floor(Math.random()*pairs.length)];
+  $('tN').value = N; $('tI').value = ''; $('tK').value = K;
+  $('tV').value=''; $('tB').value=''; $('tKB').value='';
+  tFields.forEach(id => { const m = $(id+'-mark'); if (m) clearMark(m); });
+  $('t-result').className = 'result';
+}
+
+/* ============ калькулятор: изображение ============ */
+const gFields = ['gW','gH','gN','gI','gV','gB','gKB'];
+function gCheck(){
+  const W = +$('gW').value || 0, H = +$('gH').value || 0;
+  const N = +$('gN').value || 0, i = +$('gI').value || 0;
+  const V = +$('gV').value || 0, B = +$('gB').value || 0, KB = +$('gKB').value || 0;
+
+  const res = $('g-result');
+  const err = [];
+  let total = 0, ok = 0;
+
+  const iOk = isPow2(N) && i === log2(N);
+  if (i) { total++; setMark($('gI-mark'), iOk); if (iOk) ok++; else err.push(`глубина цвета: ${N} = 2^i → i = ${isPow2(N) ? log2(N) : '?'} бит`); }
+  else clearMark($('gI-mark'));
+
+  if (V) {
+    total++;
+    const vOk = near(V, W*H*i);
+    setMark($('gV-mark'), vOk);
+    if (vOk) ok++; else err.push(`V = W · H · i = ${W} · ${H} · ${i} = ${nf(W*H*i)} бит`);
+  } else clearMark($('gV-mark'));
+
+  if (B) {
+    total++;
+    const bOk = near(B, V/8);
+    setMark($('gB-mark'), bOk);
+    if (bOk) ok++; else err.push(`байты = ${V}/8 = ${nf(V/8)} Б`);
+  } else clearMark($('gB-mark'));
+
+  if (KB) {
+    total++;
+    const kbOk = near(KB, V/8/1024);
+    setMark($('gKB-mark'), kbOk);
+    if (kbOk) ok++; else err.push(`КБ = ${V/8/1024} КБ`);
+  } else clearMark($('gKB-mark'));
+
+  res.className = 'result ' + (err.length ? 'err' : 'ok');
+  if (!total) res.textContent = 'Заполни хотя бы одну проверяемую ячейку: i, V, байты или КБ.';
+  else if (!err.length) res.textContent = `Всё верно! Проверено ${ok} из ${total} полей.`;
+  else res.innerHTML = `Проверь: <ul style="margin:6px 0 0;padding-left:18px">` + err.map(e=>`<li>${e}</li>`).join('') + `</ul>`;
+}
+function gNew(){
+  const sizes = [[640,480],[800,600],[1024,768],[320,240],[1920,1080]];
+  const [W,H] = sizes[Math.floor(Math.random()*sizes.length)];
+  const colors = [16, 256, 65536];
+  const N = colors[Math.floor(Math.random()*colors.length)];
+  $('gW').value = W; $('gH').value = H; $('gN').value = N; $('gI').value='';
+  ['gV','gB','gKB'].forEach(id => $(id).value='');
+  gFields.forEach(id => { const m = $(id+'-mark'); if (m) clearMark(m); });
+  $('g-result').className = 'result';
+}
+
+$('t-check').addEventListener('click', tCheck);
+$('t-new').addEventListener('click', tNew);
+$('g-check').addEventListener('click', gCheck);
+$('g-new').addEventListener('click', gNew);
+
+/* ============ тренажёр ============ */
+const state = { mode:'all', q:null, num:0, right:0, wrong:0, streak:0, best:0, answered:false };
+
+const rnd = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = a => a.map(v => [Math.random(), v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+
+function fmtV(bits){
+  // переводим в удобную единицу для показа: байты, КБ
+  const bytes = bits / 8;
+  if (bytes >= 1024 && bytes % 1024 === 0) return {txt: (bytes/1024) + ' КБ', val: bytes/1024, unit:'КБ'};
+  return {txt: nf(bytes) + ' байт', val: bytes, unit:'байт'};
+}
+
+function makeText(){
+  const Ns = [16, 32, 64, 128, 256];
+  const N = rnd(Ns);
+  const i = log2(N);
+  const K = rnd([100, 200, 300, 400, 500, 640, 800, 1000, 1280]);
+  const Vbits = K*i;
+  const bytes = Vbits/8;
+  // варианты ответа в байтах
+  const base = bytes;
+  const opts = new Set([base, base/2, base*2, K, K*i/4, i*4]);
+  // подбираем 4 правдоподобных
+  const cands = [base, base*2, base/2, K*(i+2)/8, K*(i-2)/8, K/2*(i)/8].filter(x=>x>0 && Number.isFinite(x));
+  const uniq = [...new Set(cands.map(x=>Math.round(x)))];
+  while (uniq.length < 4) uniq.push(Math.round(base + Math.random()*base));
+  const four = shuffle([Math.round(base), ...shuffle(uniq.filter(x=>x!==Math.round(base))).slice(0,3)]);
+  const optsList = four.map(v => ({val:v, txt: v >= 1024 && v % 1024===0 ? (v/1024)+' КБ' : nf(v)+' Б'}));
+  const rightIdx = optsList.findIndex(o => o.val === Math.round(base));
+  return {
+    kind:'text',
+    q:`Текст из <b>${nf(K)}</b> символов записан алфавитом мощностью <b>${nf(N)}</b> символов. Какой информационный объём занимает этот текст?`,
+    options: optsList,
+    right: rightIdx,
+    solution: `<ol>
+      <li>Находим бит на символ: N = ${N} = 2<sup>${i}</sup>, значит i = ${i} бит.</li>
+      <li>Считаем объём в битах: V = K · i = ${nf(K)} · ${i} = ${nf(Vbits)} бит.</li>
+      <li>Переводим в байты: ${nf(Vbits)} : 8 = ${nf(bytes)} байт${bytes >= 1024 && bytes%1024===0 ? ' = ' + (bytes/1024) + ' КБ' : ''}.</li>
+    </ol>`
+  };
+}
+
+function makeImage(){
+  const W = rnd([320, 640, 800, 1024, 1280]);
+  const H = rnd([240, 480, 600, 768]);
+  const colorPicks = [16, 64, 256, 65536];
+  const N = rnd(colorPicks);
+  const i = log2(N);
+  const bits = W*H*i;
+  const bytes = bits/8;
+  const kb = bytes/1024;
+  const uniq = [...new Set([Math.round(kb), Math.round(kb*2), Math.round(kb/2), Math.round(kb*4), Math.round(kb/4), Math.round(W*H/1024), Math.round(W*H*i/1024/8/2)])].filter(x=>x>0);
+  while (uniq.length < 4) uniq.push(Math.round(kb + Math.random()*kb));
+  const four = shuffle([Math.round(kb), ...shuffle(uniq.filter(x=>x!==Math.round(kb))).slice(0,3)]);
+  const optsList = four.map(v => ({val:v, txt: nf(v)+' КБ'}));
+  const rightIdx = optsList.findIndex(o => o.val === Math.round(kb));
+  return {
+    kind:'image',
+    q:`Изображение размером <b>${W} × ${H}</b> пикселей закодировано с палитрой из <b>${nf(N)}</b> цветов. Какой информационный объём оно занимает?`,
+    options: optsList,
+    right: rightIdx,
+    solution: `<ol>
+      <li>Глубина цвета: ${nf(N)} = 2<sup>${i}</sup>, значит i = ${i} бит на пиксель.</li>
+      <li>Всего пикселей: W · H = ${nf(W)} · ${nf(H)} = ${nf(W*H)}.</li>
+      <li>Объём: V = ${nf(W*H)} · ${i} = ${nf(bits)} бит.</li>
+      <li>В байтах: ${nf(bits/8)} Б; в КБ: ${nf(bits/8/1024)} КБ${Number.isInteger(kb) ? '' : ' (≈ ' + Math.round(kb) + ' КБ)'}.</li>
+    </ol>`
+  };
+}
+
+function nextQuestion(){
+  clearTimeout(state.timer);
+  state.answered = false;
+  let q;
+  if (state.mode === 'text') q = makeText();
+  else if (state.mode === 'image') q = makeImage();
+  else {
+    // чередуем: если предыдущее было текстом — картинка, иначе случайно
+    const last = state.q && state.q.kind;
+    if (last === 'text') q = makeImage();
+    else if (last === 'image') q = makeText();
+    else q = Math.random() < 0.5 ? makeText() : makeImage();
+  }
+  state.q = q;
+  state.num++;
+
+  $('qnum').textContent = state.num;
+  $('q-text').innerHTML = `<span class="badge ${q.kind==='image'?'g':''}">${q.kind==='text'?'текст':'изображение'}</span> ` + q.q;
+
+  const box = $('options');
+  box.innerHTML = '';
+  q.options.forEach((o, idx) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.type = 'button';
+    b.innerHTML = `<b>${'АБВГ'[idx]})</b> ${o.txt}`;
+    b.dataset.idx = idx;
+    b.addEventListener('click', () => answer(idx));
+    box.appendChild(b);
+  });
+
+  $('sol-body').innerHTML = q.solution;
+  $('solution').classList.remove('show');
+  $('next-q').hidden = true;
+  $('show-sol').hidden = false;
+  $('show-sol').textContent = 'Показать решение';
+  $('show-sol').disabled = false;
+
+  // прогресс: показываем заполненность по количеству заданий до 10
+  updateProgress();
+}
+
+function answer(idx){
+  if (state.answered || !state.q) return;
+  state.answered = true;
+  const q = state.q;
+  const btns = [...$('options').children];
+  btns.forEach(b => { b.disabled = true; });
+  const correct = idx === q.right;
+  btns[q.right].classList.add('correct');
+  if (idx !== q.right) btns[idx].classList.add('wrong');
+
+  if (correct){
+    state.right++;
+    state.streak++;
+    state.best = Math.max(state.best, state.streak);
+  } else {
+    state.wrong++;
+    state.streak = 0;
+    // после ошибки сразу показываем решение
+    $('solution').classList.add('show');
+    $('show-sol').hidden = true;
+  }
+  updateStats();
+  $('next-q').hidden = false;
+  $('next-q').focus();
+  updateProgress();
+}
+
+function updateStats(){
+  $('right').textContent = state.right;
+  $('wrong').textContent = state.wrong;
+  $('streak').textContent = state.streak;
+  // сохраняем лучшую серию в заголовок блока прогресса
+  $('bar').parentElement.title = `Лучшая серия: ${state.best}`;
+}
+
+function updateProgress(){
+  // прогресс: доля правильно решённых из всех заданий серии
+  const answered = state.right + state.wrong;
+  if (!answered){ $('bar').style.width = '0'; $('bar').style.background = ''; $('bar').parentElement.title = ''; return; }
+  const pct = (state.right / answered) * 100;
+  $('bar').style.width = pct + '%';
+  $('bar').style.background = pct >= 70 ? 'linear-gradient(90deg,#1f9d55,#5cc98f)'
+    : pct >= 40 ? 'linear-gradient(90deg,#f0a020,#f5c46b)'
+    : 'linear-gradient(90deg,#d93b3b,#ef7a7a)';
+  $('bar').parentElement.title = `Решено верно: ${state.right} из ${answered} · лучшая серия: ${state.best}`;
+}
+
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    state.mode = c.dataset.mode;
+    state.q = null;
+    state.num = 0; state.right = 0; state.wrong = 0; state.streak = 0; state.best = 0;
+    progressValues = [];
+    $('bar').style.width = '0';
+    updateStats();
+    nextQuestion();
+  });
+});
+$('new-q').addEventListener('click', nextQuestion);
+$('next-q').addEventListener('click', nextQuestion);
+$('show-sol').addEventListener('click', () => {
+  $('solution').classList.add('show');
+  $('show-sol').hidden = true;
+  $('next-q').hidden = false;
+});
+
+$('tN').addEventListener('input', () => { if (isPow2(+$('tN').value)) $('tI-mark').textContent=''; });
+$('gMode').addEventListener('change', () => {
+  const mode = $('gMode').value;
+  $('gN').disabled = mode === 'I';
+  $('gI').disabled = mode === 'N';
+});
+
+nextQuestion();
+</script>
+</body>
+</html>
