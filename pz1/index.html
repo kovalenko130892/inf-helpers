@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ПЗ № 1 — Разветвляющиеся алгоритмы. Условный оператор if-else</title>
+<style>
+:root{
+  --bg:#f5f7ff;
+  --ink:#161a2e;
+  --ink-soft:#4a5273;
+  --ink-dim:#7b84a6;
+  --card:rgba(255,255,255,.78);
+  --line:rgba(124,92,255,.18);
+  --cyan:#00c8e0;
+  --violet:#7c5cff;
+  --magenta:#ff5cd0;
+  --mint:#16c79a;
+  --amber:#ffab2e;
+  --shadow:0 18px 50px -22px rgba(90,80,180,.45);
+  --radius:22px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+#neural{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.85}
+body::before,body::after{
+  content:"";position:fixed;z-index:0;pointer-events:none;border-radius:50%;filter:blur(90px);
+}
+body::before{
+  width:52vw;height:52vw;left:-14vw;top:-16vw;
+  background:radial-gradient(circle,rgba(0,200,224,.28),transparent 68%);
+}
+body::after{
+  width:48vw;height:48vw;right:-16vw;top:24vh;
+  background:radial-gradient(circle,rgba(255,92,208,.22),transparent 68%);
+}
+.wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:0 22px}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:rgba(255,255,255,.66);
+  border-bottom:1px solid var(--line);
+}
+nav .wrap{display:flex;align-items:center;gap:22px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;font-size:15px;white-space:nowrap}
+.dot{
+  width:11px;height:11px;border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan),var(--violet));
+  box-shadow:0 0 12px rgba(0,200,224,.9),0 0 26px rgba(124,92,255,.55);
+  animation:pulse 2.6s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.72}}
+nav ul{display:flex;gap:4px;list-style:none;margin:0;padding:0;overflow:auto;scrollbar-width:none}
+nav ul::-webkit-scrollbar{display:none}
+nav a{
+  color:var(--ink-soft);text-decoration:none;font-size:13.5px;font-weight:500;
+  padding:8px 12px;border-radius:11px;white-space:nowrap;transition:.22s;
+}
+nav a:hover{color:var(--ink);background:rgba(124,92,255,.09)}
+nav a.active{
+  color:#fff;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  box-shadow:0 8px 22px -8px rgba(124,92,255,.9);
+}
+
+/* ---------- hero ---------- */
+header.hero{padding:74px 0 54px;position:relative}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--violet);
+  padding:7px 15px;border-radius:999px;
+  background:rgba(124,92,255,.09);
+  border:1px solid rgba(124,92,255,.24);
+  box-shadow:0 0 24px -6px rgba(124,92,255,.5);
+}
+h1{
+  font-size:clamp(30px,5vw,52px);line-height:1.1;margin:22px 0 0;
+  font-weight:800;letter-spacing:-.02em;max-width:19ch;
+}
+h1 .grad{
+  background:linear-gradient(100deg,var(--violet) 0%,var(--cyan) 48%,var(--magenta) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(124,92,255,.28));
+}
+.lead{margin:20px 0 0;font-size:17.5px;color:var(--ink-soft);max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.chip{
+  font-size:13px;font-weight:600;padding:9px 15px;border-radius:13px;
+  background:rgba(255,255,255,.8);border:1px solid var(--line);
+  color:var(--ink-soft);box-shadow:0 10px 24px -18px rgba(90,80,180,.8);
+}
+.chip b{color:var(--ink);font-weight:700}
+.chip.acc{
+  background:linear-gradient(135deg,rgba(0,200,224,.14),rgba(124,92,255,.14));
+  border-color:rgba(0,200,224,.36);color:#0b6d7d;
+}
+
+/* ---------- sections ---------- */
+section{padding:46px 0 8px;scroll-margin-top:80px}
+.sec-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:26px}
+.num{
+  flex:0 0 auto;width:52px;height:52px;border-radius:16px;
+  display:grid;place-items:center;font-weight:800;font-size:20px;color:#fff;
+  background:linear-gradient(140deg,var(--violet),var(--cyan));
+  box-shadow:0 14px 34px -14px rgba(124,92,255,.95),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.sec-head h2{margin:0;font-size:clamp(21px,3vw,29px);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.sec-head p{margin:5px 0 0;color:var(--ink-dim);font-size:14.5px}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.card{
+  background:var(--card);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.9);
+  outline:1px solid var(--line);outline-offset:-1px;
+  border-radius:var(--radius);
+  padding:24px 24px 22px;
+  box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s;
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 26px 60px -26px rgba(90,80,180,.6)}
+.card::after{
+  content:"";position:absolute;left:0;top:0;height:3px;width:100%;
+  background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta));
+  opacity:.85;
+}
+.card h3{margin:0 0 12px;font-size:15px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--violet)}
+.card h3.cy{color:#0a97ad}
+.card h3.mg{color:#c93ba6}
+.card p{margin:0 0 10px}
+.card p:last-child{margin-bottom:0}
+.muted{color:var(--ink-soft);font-size:14.6px}
+
+/* lists */
+ul.neat,ol.neat{margin:0;padding:0;list-style:none}
+ul.neat li,ol.neat li{position:relative;padding-left:22px;margin-bottom:9px;font-size:14.8px;color:var(--ink-soft)}
+ul.neat li:last-child,ol.neat li:last-child{margin-bottom:0}
+ul.neat li::before{
+  content:"";position:absolute;left:2px;top:.62em;width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan),var(--violet));
+  box-shadow:0 0 9px rgba(0,200,224,.85);
+}
+ol.neat{counter-reset:n}
+ol.neat li{counter-increment:n;padding-left:30px}
+ol.neat li::before{
+  content:counter(n);position:absolute;left:0;top:.12em;
+  width:21px;height:21px;border-radius:7px;display:grid;place-items:center;
+  font-size:11.5px;font-weight:800;color:var(--violet);
+  background:rgba(124,92,255,.11);border:1px solid rgba(124,92,255,.26);
+}
+ul.neat b,ol.neat b{color:var(--ink);font-weight:700}
+
+/* table */
+.tbl-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.82);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
+thead th{
+  text-align:left;font-size:11.6px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--violet);font-weight:800;
+  padding:14px 16px;background:rgba(124,92,255,.07);
+  border-bottom:1px solid var(--line);white-space:nowrap;
+}
+tbody td{padding:14px 16px;border-bottom:1px solid rgba(124,92,255,.1);vertical-align:top;color:var(--ink-soft)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(0,200,224,.05)}
+tbody td:first-child{color:var(--ink);font-weight:600}
+.time{
+  display:inline-block;min-width:52px;text-align:center;
+  font-size:12.5px;font-weight:800;color:#0a97ad;
+  padding:3px 9px;border-radius:8px;
+  background:rgba(0,200,224,.13);border:1px solid rgba(0,200,224,.3);
+}
+
+/* badges */
+.badge{
+  display:inline-block;font-size:12px;font-weight:800;padding:4px 11px;border-radius:8px;white-space:nowrap;
+}
+.b-mid{color:#a5701a;background:rgba(255,171,46,.16);border:1px solid rgba(255,171,46,.4)}
+.b-low{color:#c0335a;background:rgba(255,92,120,.14);border:1px solid rgba(255,92,120,.38)}
+.b-ok{color:#0b8f6d;background:rgba(22,199,154,.14);border:1px solid rgba(22,199,154,.38)}
+
+/* code */
+.code{
+  position:relative;border-radius:15px;overflow:hidden;
+  background:#fbfcff;border:1px solid rgba(124,92,255,.22);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 12px 30px -22px rgba(90,80,180,.9);
+  margin:12px 0 0;
+}
+.code .bar{
+  display:flex;align-items:center;gap:7px;padding:9px 14px;
+  border-bottom:1px solid rgba(124,92,255,.16);background:rgba(124,92,255,.05);
+  font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);
+}
+.code .bar i{width:9px;height:9px;border-radius:50%;display:block}
+.code .bar i:nth-child(1){background:#ff7a90}
+.code .bar i:nth-child(2){background:#ffc861}
+.code .bar i:nth-child(3){background:#4fd8a4}
+.code .bar span{margin-left:6px}
+.code pre{margin:0;padding:15px 17px;overflow-x:auto;font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace;font-size:13.2px;line-height:1.65;color:#2a3050}
+.k{color:#8b3fd4;font-weight:600}
+.s{color:#0a8f6b}
+.f{color:#1666d4}
+.c{color:#9aa1bd;font-style:italic}
+.err{background:rgba(255,92,120,.13);border-radius:5px;padding:1px 3px;box-shadow:0 0 0 1px rgba(255,92,120,.32)}
+.code.bad{border-color:rgba(255,92,120,.4)}
+.code.bad .bar{background:rgba(255,92,120,.07);color:#c0335a}
+.code.good{border-color:rgba(22,199,154,.35)}
+.code.good .bar{background:rgba(22,199,154,.07);color:#0b8f6d}
+
+/* flowchart */
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;padding:8px 0}
+.node{
+  padding:11px 22px;border-radius:13px;font-size:14px;font-weight:700;
+  background:rgba(255,255,255,.95);border:1px solid rgba(124,92,255,.3);color:var(--ink);
+  box-shadow:0 10px 26px -18px rgba(90,80,180,.9);
+}
+.node.cond{
+  border-radius:15px;transform:rotate(0deg);
+  background:linear-gradient(135deg,rgba(0,200,224,.16),rgba(124,92,255,.14));
+  border-color:rgba(0,200,224,.45);color:#0a6d7d;
+}
+.arrow{width:2px;height:26px;background:linear-gradient(180deg,rgba(124,92,255,.55),rgba(0,200,224,.55))}
+.branch{display:flex;gap:56px;margin-top:0}
+.branch .col{display:flex;flex-direction:column;align-items:center}
+.blabel{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);margin:6px 0}
+
+/* timeline */
+.tl{position:relative;padding-left:30px}
+.tl::before{
+  content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;
+  background:linear-gradient(180deg,var(--cyan),var(--violet),var(--magenta));opacity:.45;border-radius:2px;
+}
+.tl .item{position:relative;margin-bottom:22px}
+.tl .item:last-child{margin-bottom:0}
+.tl .item::before{
+  content:"";position:absolute;left:-26px;top:6px;width:12px;height:12px;border-radius:50%;
+  background:#fff;border:2.5px solid var(--violet);
+  box-shadow:0 0 14px rgba(124,92,255,.8);
+}
+.tl h4{margin:0 0 6px;font-size:15.5px;font-weight:800}
+.tl p{margin:0;font-size:14.5px;color:var(--ink-soft)}
+
+/* quote */
+.quote{
+  border-left:4px solid transparent;
+  border-image:linear-gradient(180deg,var(--cyan),var(--violet),var(--magenta)) 1;
+  background:rgba(255,255,255,.72);
+  padding:22px 26px;border-radius:0 18px 18px 0;
+  font-size:16px;color:var(--ink);box-shadow:var(--shadow);
+}
+.quote b{color:var(--violet)}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+
+footer{margin-top:64px;padding:34px 0 46px;border-top:1px solid var(--line);position:relative;z-index:1}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;color:var(--ink-dim);font-size:13px}
+.up{
+  text-decoration:none;color:var(--violet);font-weight:700;font-size:13px;
+  padding:9px 15px;border-radius:11px;border:1px solid rgba(124,92,255,.28);
+  background:rgba(124,92,255,.07);transition:.22s;
+}
+.up:hover{background:rgba(124,92,255,.14);box-shadow:0 0 22px -6px rgba(124,92,255,.7)}
+@media (max-width:640px){
+  nav .wrap{gap:12px}
+  .brand span{display:none}
+  header.hero{padding:48px 0 34px}
+  .card{padding:20px}
+  .branch{gap:26px}
+}
+@media print{
+  #neural,body::before,body::after,nav,.up{display:none}
+  body{background:#fff}
+  .card,.tbl-wrap,.quote{box-shadow:none;break-inside:avoid}
+  .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<canvas id="neural"></canvas>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span><span>ПЗ № 1 · Информатика 8 класс</span></div>
+    <ul>
+      <li><a href="#top" class="active">Начало</a></li>
+      <li><a href="#plan">План урока</a></li>
+      <li><a href="#stages">Этапы</a></li>
+      <li><a href="#tasks">Система задач</a></li>
+      <li><a href="#konspekt">Конспект</a></li>
+      <li><a href="#ai">ИИ на уроке</a></li>
+      <li><a href="#reflex">Рефлексия</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="eyebrow rv">Практическое задание № 1 · МГПУ ИЦО</div>
+    <h1 class="rv">Разветвляющиеся алгоритмы.<br><span class="grad">Условный оператор if-else</span></h1>
+    <p class="lead rv">План урока, конспект занятия и рефлексия уровня сформированности педагогических компетенций. 8 класс, язык Python, 45 минут.</p>
+    <div class="meta rv">
+      <div class="chip">Группа <b>МПИНФ261-м</b></div>
+      <div class="chip">Дзюба Ю. Ю. · Коваленко А. Д.</div>
+      <div class="chip acc"><b>Python</b> · 8 класс</div>
+      <div class="chip">УМК Босова Л. Л.</div>
+      <div class="chip">ФГОС ООО · приказ № 287</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ ЗАДАНИЕ 1 ============ -->
+  <section id="plan">
+    <div class="sec-head rv">
+      <div class="num">1</div>
+      <div>
+        <h2>Подробный план урока</h2>
+        <p>Урок открытия нового знания (комбинированный с элементами практикума) · 45 минут</p>
+      </div>
+    </div>
+
+    <div class="grid g2 rv">
+      <div class="card">
+        <h3>Дидактическая цель</h3>
+        <p class="muted">Сформировать у учащихся представление о разветвляющемся алгоритме и сформировать умение записывать на языке Python простые и составные условные конструкции для решения учебных задач.</p>
+      </div>
+      <div class="card">
+        <h3 class="cy">Формы, средства и методы</h3>
+        <p class="muted"><b>Формы:</b> фронтальная, индивидуальная, парная.</p>
+        <p class="muted"><b>Методы:</b> проблемное изложение (постановка проблемы через жизненную ситуацию), объяснительно-иллюстративный с элементами эвристической беседы, практический (работа за ПК), метод самоконтроля и взаимоконтроля.</p>
+        <p class="muted"><b>Средства:</b> интерактивная панель, проектор, компьютеры с установленной средой разработки (или онлайн-среда Replit), раздаточные карточки с заданиями и блок-схемами.</p>
+      </div>
+    </div>
+
+    <div class="grid g3 rv" style="margin-top:16px">
+      <div class="card">
+        <h3>Образовательные задачи</h3>
+        <p class="muted">Познакомить с понятием «ветвление» и синтаксисом условного оператора <b>if-else</b> в Python; научить составлять блок-схемы и программный код для алгоритмов с ветвлением.</p>
+      </div>
+      <div class="card">
+        <h3 class="mg">Развивающие задачи</h3>
+        <p class="muted">Развивать логическое и алгоритмическое мышление; формировать умение анализировать условие задачи и выделять существенные признаки для построения логического выражения.</p>
+      </div>
+      <div class="card">
+        <h3 class="cy">Воспитательные задачи</h3>
+        <p class="muted">Воспитывать информационную культуру; формировать навыки самостоятельной работы и взаимоконтроля при работе в парах.</p>
+      </div>
+    </div>
+
+    <div class="card rv" style="margin-top:16px">
+      <h3>Планируемые результаты обучения (ФГОС)</h3>
+      <div class="grid g3" style="margin-top:14px">
+        <div>
+          <p><b>Предметные.</b> Ученик научится записывать условный оператор на Python; получит возможность научиться составлять программы с полным и неполным ветвлением для решения практико-ориентированных задач.</p>
+        </div>
+        <div>
+          <p><b>Метапредметные.</b></p>
+          <ul class="neat">
+            <li><b>познавательные</b> — умение создавать абстрактный алгоритм и переводить его в программный код;</li>
+            <li><b>регулятивные</b> — умение ставить учебную задачу на основе соотнесения известного и неизвестного;</li>
+            <li><b>коммуникативные</b> — умение работать в паре, аргументировать свою позицию.</li>
+          </ul>
+        </div>
+        <div>
+          <p><b>Личностные.</b> Формирование интереса к изучению программирования через решение практических задач; готовность к саморазвитию через исправление ошибок.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ЭТАПЫ ============ -->
+  <section id="stages">
+    <div class="sec-head rv">
+      <div class="num">2</div>
+      <div>
+        <h2>Этапы урока и деятельность участников</h2>
+        <p>Шесть этапов · 5 + 5 + 12 + 8 + 10 + 5 = 45 минут</p>
+      </div>
+    </div>
+
+    <div class="tbl-wrap rv">
+      <table>
+        <thead>
+          <tr><th>Этап и длительность</th><th>Деятельность учителя</th><th>Деятельность учащихся</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. Организационный и мотивационный<br><span class="time">5 мин</span></td>
+            <td>Приветствие. Создание проблемной ситуации: «Представьте, что мы пишем программу для умного светофора. Если горит красный — идти нельзя, иначе — можно. Как описать это в коде, если мы знаем только линейные алгоритмы?»</td>
+            <td>Слушают, осознают ограниченность линейного алгоритма. Формулируют тему и цель урока.</td>
+          </tr>
+          <tr>
+            <td>2. Актуализация знаний<br><span class="time">5 мин</span></td>
+            <td>Фронтальный опрос: что такое алгоритм, какие виды алгоритмов уже знают (линейный). Просит привести примеры ветвления из жизни.</td>
+            <td>Отвечают на вопросы, приводят примеры («если оценка 5, то…», «если пойдёт дождь…»).</td>
+          </tr>
+          <tr>
+            <td>3. Изучение нового материала<br><span class="time">12 мин</span></td>
+            <td>Объясняет структуру условного оператора в Python (<b>if условие:</b>, <b>else:</b>). Демонстрирует на доске и экране запись простейшей программы (например, определение чётности числа). Показывает, как условие превращается в логическое выражение.</td>
+            <td>Записывают синтаксис в тетрадь. Анализируют пример. Отвечают на вопросы учителя о том, что произойдёт при изменении условия.</td>
+          </tr>
+          <tr>
+            <td>4. Первичное закрепление<br><span class="time">8 мин</span></td>
+            <td>Организует работу в парах с карточками: дана блок-схема с ветвлением, нужно восстановить пропущенный код на Python. Консультирует.</td>
+            <td>В парах выполняют задание на карточках. Сверяют результат с эталоном на доске. Обсуждают ошибки.</td>
+          </tr>
+          <tr>
+            <td>5. Практическая работа за ПК<br><span class="time">10 мин</span></td>
+            <td>Формулирует задание: написать программу, которая запрашивает возраст пользователя и выводит «Доступ разрешён», если возраст ≥ 18, иначе «Доступ запрещён». Контролирует выполнение.</td>
+            <td>Индивидуально работают за ПК в среде Python (или онлайн). Вводят код, тестируют его с разными данными.</td>
+          </tr>
+          <tr>
+            <td>6. Рефлексия и итог<br><span class="time">5 мин</span></td>
+            <td>Организует беседу: «Что нового узнали? Где могут пригодиться эти знания? Что вызвало трудности?» Выставляет оценки за активность и практическую работу.</td>
+            <td>Отвечают на вопросы, анализируют свою деятельность на уроке. Записывают домашнее задание (дифференцированное: базовое — составить 2 задачи с ветвлением; повышенное — задача с составным условием).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ СИСТЕМА ЗАДАЧ ============ -->
+  <section id="tasks">
+    <div class="sec-head rv">
+      <div class="num">3</div>
+      <div>
+        <h2>Система задач</h2>
+        <p>От репродуктивной до творческой — четыре уровня нарастания самостоятельности</p>
+      </div>
+    </div>
+
+    <div class="grid g4 rv">
+      <div class="card">
+        <h3>1 · Репродуктивная</h3>
+        <p class="muted">Определить, что выведет программа при заданных значениях переменной (анализ готового кода).</p>
+      </div>
+      <div class="card">
+        <h3 class="cy">2 · Продуктивная</h3>
+        <p class="muted">На карточках: дописать недостающую часть кода (<b>if</b> или <b>else</b>) для заданной блок-схемы.</p>
+      </div>
+      <div class="card">
+        <h3 class="mg">3 · Практическая</h3>
+        <p class="muted">За ПК: написать программу проверки возраста для доступа к сайту (полное ветвление).</p>
+      </div>
+      <div class="card">
+        <h3>4 · Творческая</h3>
+        <p class="muted">Домашнее задание: составить задачу из повседневной жизни, где требуется выбор действия (например, «если на улице холодно, то надеть шапку»), и запрограммировать её.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ЗАДАНИЕ 2: КОНСПЕКТ ============ -->
+  <section id="konspekt">
+    <div class="sec-head rv">
+      <div class="num">4</div>
+      <div>
+        <h2>Конспект урока: целевой блок</h2>
+        <p>УМК Босова Л. Л., Информатика. 8 класс · ФГОС ООО (приказ Минпросвещения № 287 от 31.05.2021)</p>
+      </div>
+    </div>
+
+    <div class="tbl-wrap rv">
+      <table>
+        <thead><tr><th style="width:26%">Параметр</th><th>Содержание</th></tr></thead>
+        <tbody>
+          <tr><td>Цель урока</td><td>Формирование умения записывать разветвляющиеся алгоритмы на языке Python с использованием условного оператора if-else</td></tr>
+          <tr><td>Образовательные задачи</td><td>Познакомить с синтаксисом и семантикой оператора if-else; научить составлять блок-схемы ветвления; отработать запись условий с операторами сравнения</td></tr>
+          <tr><td>Развивающие задачи</td><td>Развивать алгоритмическое и логическое мышление; развивать умение анализировать условие задачи и выделять ветви выполнения</td></tr>
+          <tr><td>Воспитательные задачи</td><td>Воспитывать аккуратность при записи кода (соблюдение отступов); воспитывать культуру работы в паре</td></tr>
+          <tr><td>Личностные результаты</td><td>Понимание роли программирования в решении практических задач; готовность к самостоятельному обучению</td></tr>
+          <tr><td>Метапредметные результаты</td><td><b>Регулятивные:</b> умение ставить цель и планировать действия. <b>Познавательные:</b> умение строить алгоритм в виде блок-схемы и программы. <b>Коммуникативные:</b> умение работать в паре, аргументировать решение</td></tr>
+          <tr><td>Предметные результаты</td><td>Знать синтаксис if-else; уметь записывать условия с операторами <b>&lt;, &gt;, ==, !=, &lt;=, &gt;=</b>; уметь читать и исполнять программу с ветвлением</td></tr>
+          <tr><td>Оборудование</td><td>ПК с установленным Python 3 / онлайн-редактором (replit.com, trinket.io), проектор, раздаточный материал с задачами</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ ХОД УРОКА 10 ЭТАПОВ ============ -->
+  <section id="flow">
+    <div class="sec-head rv">
+      <div class="num">5</div>
+      <div>
+        <h2>Содержательный блок: ход урока</h2>
+        <p>Десять этапов с указанием формируемых УУД и точного времени</p>
+      </div>
+    </div>
+
+    <div class="tbl-wrap rv">
+      <table>
+        <thead>
+          <tr><th>№</th><th>Этап урока</th><th>Деятельность учителя</th><th>Деятельность учеников</th><th>Формируемые УУД</th><th>Время</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td><td>Организационный момент</td>
+            <td>Приветствие, проверка готовности, создание позитивного настроя</td>
+            <td>Готовятся к уроку</td>
+            <td>Личностные: самоорганизация</td>
+            <td><span class="time">1 мин</span></td>
+          </tr>
+          <tr>
+            <td>2</td><td>Мотивация и актуализация</td>
+            <td>Задаёт проблемную ситуацию: «Программа вычисляет площадь круга. Но что, если пользователь ввёл отрицательный радиус? Как программа должна отреагировать?» Обсуждение.</td>
+            <td>Высказывают предположения, понимают, что линейного алгоритма недостаточно</td>
+            <td>Познавательные: анализ ситуации; коммуникативные: выражение мнения</td>
+            <td><span class="time">4 мин</span></td>
+          </tr>
+          <tr>
+            <td>3</td><td>Постановка учебной задачи</td>
+            <td>Формулирует тему и цель урока совместно с учениками. Записывает на доске: «Сегодня научимся делать так, чтобы программа принимала решения»</td>
+            <td>Формулируют цель: научиться писать программы с ветвлением</td>
+            <td>Регулятивные: целеполагание</td>
+            <td><span class="time">2 мин</span></td>
+          </tr>
+          <tr>
+            <td>4</td><td>Открытие нового знания</td>
+            <td>1. Показывает блок-схему ветвления (ромб — условие, две стрелки — «да»/«нет»). 2. Демонстрирует синтаксис: if условие: блок1 else: блок2. 3. Акцентирует внимание на двоеточии и отступах (4 пробела). 4. Разбирает пример: программа определения чётности числа</td>
+            <td>Слушают, записывают синтаксис в тетрадь, задают вопросы</td>
+            <td>Познавательные: знаково-символическое моделирование; предметные: знание синтаксиса</td>
+            <td><span class="time">8 мин</span></td>
+          </tr>
+          <tr>
+            <td>5</td><td>Первичное закрепление</td>
+            <td>Предлагает задачу: «Написать программу, которая по введённому числу выводит „положительное“ или „отрицательное“» (ноль — отдельно, как усложнение). Организует работу в парах у компьютера</td>
+            <td>Составляют программу в парах, запускают, тестируют на разных числах</td>
+            <td>Коммуникативные: работа в паре; предметные: применение if-else</td>
+            <td><span class="time">7 мин</span></td>
+          </tr>
+          <tr>
+            <td>6</td><td>Физкультминутка</td>
+            <td>Проводит разминку для глаз и осанки</td>
+            <td>Выполняют упражнения</td>
+            <td>Личностные: забота о здоровье</td>
+            <td><span class="time">2 мин</span></td>
+          </tr>
+          <tr>
+            <td>7</td><td>Самостоятельная работа с самопроверкой</td>
+            <td>Раздаёт карточки с 3 задачами разного уровня: 1) максимальное из двух чисел; 2) оценка по баллам (≥ 80 — «5», иначе «4»); 3)* дополнительно — знак числа (полож./отриц./ноль). Даёт эталон для самопроверки</td>
+            <td>Решают задачи, сверяют с эталоном, исправляют ошибки</td>
+            <td>Регулятивные: самоконтроль; познавательные: применение знаний в новой ситуации</td>
+            <td><span class="time">10 мин</span></td>
+          </tr>
+          <tr>
+            <td>8</td><td>Включение в систему знаний</td>
+            <td>Обсуждает типичные ошибки: забыли двоеточие, неправильный отступ, = вместо ==. Показывает вложенный if как развитие темы (анонс следующего урока)</td>
+            <td>Анализируют свои ошибки, делают выводы</td>
+            <td>Познавательные: рефлексия способов действия</td>
+            <td><span class="time">5 мин</span></td>
+          </tr>
+          <tr>
+            <td>9</td><td>Рефлексия</td>
+            <td>Предлагает закончить фразы: «Сегодня я узнал…», «Мне было трудно…», «Я научился…»</td>
+            <td>Оценивают свою работу на уроке</td>
+            <td>Регулятивные: самооценка; личностные: рефлексия</td>
+            <td><span class="time">4 мин</span></td>
+          </tr>
+          <tr>
+            <td>10</td><td>Домашнее задание</td>
+            <td>Дифференцированное: базовый уровень — задача на определение високосного года; повышенный — калькулятор с проверкой деления на ноль. Объясняет критерии</td>
+            <td>Записывают ДЗ, задают вопросы</td>
+            <td>Регулятивные: планирование</td>
+            <td><span class="time">2 мин</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid g3 rv" style="margin-top:16px">
+      <div class="card">
+        <h3>Методы обучения</h3>
+        <p class="muted">Словесный (беседа), наглядный (демонстрация блок-схем), практический (работа за ПК), частично-поисковый.</p>
+      </div>
+      <div class="card">
+        <h3 class="cy">Педагогические технологии</h3>
+        <p class="muted">Технология проблемного обучения, ИКТ-технологии, технология развития критического мышления.</p>
+      </div>
+      <div class="card">
+        <h3 class="mg">Контроль и дифференциация</h3>
+        <p class="muted">Самопроверка по эталону, взаимопроверка в парах, формирующее оценивание учителем. Задачи трёх уровней сложности; подсказки-карточки для слабых учеников.</p>
+      </div>
+    </div>
+
+    <div class="card rv" style="margin-top:16px">
+      <h3>Межпредметные связи</h3>
+      <p class="muted">Математика (неравенства, чётность), алгебра (функция знака числа).</p>
+    </div>
+  </section>
+
+  <!-- ============ ОПОРНЫЙ КОНСПЕКТ ============ -->
+  <section id="summary">
+    <div class="sec-head rv">
+      <div class="num">6</div>
+      <div>
+        <h2>Приложение 1: опорный конспект</h2>
+        <p>Схема ветвления и синтаксис условного оператора для ученика</p>
+      </div>
+    </div>
+
+    <div class="grid g2 rv">
+      <div class="card">
+        <h3>Блок-схема ветвления</h3>
+        <div class="flow">
+          <div class="node">Начало</div>
+          <div class="arrow"></div>
+          <div class="node cond">Условие (ромб)</div>
+          <div class="arrow"></div>
+          <div class="branch">
+            <div class="col">
+              <div class="blabel">да</div>
+              <div class="node">Действие 1</div>
+            </div>
+            <div class="col">
+              <div class="blabel">нет</div>
+              <div class="node">Действие 2</div>
+            </div>
+          </div>
+          <div class="arrow"></div>
+          <div class="node">Конец</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="cy">Синтаксис if-else</h3>
+        <div class="code good">
+          <div class="bar"><i></i><i></i><i></i><span>python</span></div>
+<pre><span class="k">if</span> условие:
+    блок 1
+<span class="k">else</span>:
+    блок 2</pre>
+        </div>
+        <ul class="neat" style="margin-top:14px">
+          <li>после условия обязательно <b>двоеточие</b>;</li>
+          <li>вложенный блок — с отступом <b>4 пробела</b>;</li>
+          <li>сравнение записывается через <b>==</b>, а не <b>=</b>;</li>
+          <li>операторы сравнения: <b>&lt;, &gt;, ==, !=, &lt;=, &gt;=</b>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ИИ ============ -->
+  <section id="ai">
+    <div class="sec-head rv">
+      <div class="num">7</div>
+      <div>
+        <h2>Приложение 2: этап изучения нового материала с ИИ-генерацией</h2>
+        <p>Два фрагмента кода: написанный учителем и сгенерированный нейросетью</p>
+      </div>
+    </div>
+
+    <div class="card rv">
+      <h3>Проблемная ситуация</h3>
+      <p class="muted"><b>Учитель:</b> «Ребята, мы с вами знаем, что компьютер действует последовательно. Но как научить его принимать решения? Представьте, что вы создаёте бота для школьной столовой. Бот должен спросить, есть ли у ученика аллергия на орехи, и если есть — предложить только безопасное блюдо. Как нам это запрограммировать?»</p>
+      <p class="muted">Учитель демонстрирует на экране два варианта кода: один из которых сгенерирован нейросетью, а второй содержит ошибку (специально подготовленную).</p>
+    </div>
+
+    <div class="grid g2 rv" style="margin-top:16px">
+      <div class="card" style="padding-bottom:20px">
+        <h3 class="cy">Код 1 — корректный</h3>
+        <div class="code good">
+          <div class="bar"><i></i><i></i><i></i><span>python</span></div>
+<pre>allergy = <span class="f">input</span>(<span class="s">"Есть ли аллергия на орехи? (да/нет): "</span>)
+<span class="k">if</span> allergy <span class="k">==</span> <span class="s">"да"</span>:
+    <span class="f">print</span>(<span class="s">"Предлагаем фруктовый салат."</span>)
+<span class="k">else</span>:
+    <span class="f">print</span>(<span class="s">"Предлагаем творожную запеканку с орехами."</span>)</pre>
+        </div>
+      </div>
+      <div class="card" style="padding-bottom:20px">
+        <h3 class="mg">Код 2 — с логической ошибкой</h3>
+        <div class="code bad">
+          <div class="bar"><i></i><i></i><i></i><span>python · сгенерировано ИИ</span></div>
+<pre>allergy = <span class="f">input</span>(<span class="s">"Есть ли аллергия на орехи? (да/нет): "</span>)
+<span class="k">if</span> allergy <span class="err">=</span> <span class="s">"да"</span>:
+    <span class="f">print</span>(<span class="s">"Предлагаем фруктовый салат."</span>)</pre>
+        </div>
+        <p class="muted" style="margin-top:12px">Ошибка: использование оператора присваивания <b>=</b> вместо сравнения <b>==</b>.</p>
+      </div>
+    </div>
+
+    <div class="card rv" style="margin-top:16px">
+      <h3>Задание для учащихся (в парах)</h3>
+      <p class="muted">«Перед вами два фрагмента кода. Один написан учителем, другой сгенерировала нейросеть по запросу „напиши код для столовой“. Найдите ошибку в коде нейросети и объясните, почему компьютер не сможет выполнить эту программу. Как вы думаете, почему ИИ иногда ошибается?»</p>
+    </div>
+
+    <div class="quote rv" style="margin-top:16px">
+      <b>Методический комментарий.</b> Этот приём позволяет решить две задачи. Во-первых, учащиеся в деятельностном режиме осваивают синтаксис (<b>==</b>). Во-вторых, формируется критическое отношение к ИИ: ученики видят, что нейросеть — не истина в последней инстанции, её результат нужно проверять. Это соответствует современным требованиям к цифровой грамотности.
+    </div>
+
+    <div class="card rv" style="margin-top:16px">
+      <h3 class="cy">Домашнее задание, сгенерированное ИИ и адаптированное учителем</h3>
+      <p class="muted">Нейросети было дано задание: «Придумай 3 задачи по теме „ветвление“ для 8 класса на тему „школа“».</p>
+      <ol class="neat" style="margin-top:12px">
+        <li><b>Базовая.</b> Напишите программу, которая спрашивает оценку и выводит «Молодец!», если оценка 5, и «Надо подтянуть», если ниже.</li>
+        <li><b>Средняя.</b> Программа спрашивает, сдал ли ученик ЕГЭ (баллы). Если баллы &gt; 80, вывести «Поступил в топовый вуз», иначе — «Поступил в хороший вуз».</li>
+        <li><b>Продвинутая.</b> Программа спрашивает время (часы) и наличие домашнего задания. Если время &gt; 20:00 и есть ДЗ, вывести «Пора делать уроки, уже поздно!».</li>
+      </ol>
+      <p class="muted" style="margin-top:12px">Учитель проверил задачи, исправил формулировку второй задачи (убрал некорректное сравнение «хороший/топовый вуз» на нейтральное «проходной балл») и добавил третью задачу с составным условием.</p>
+    </div>
+  </section>
+
+  <!-- ============ РЕФЛЕКСИЯ ============ -->
+  <section id="reflex">
+    <div class="sec-head rv">
+      <div class="num">8</div>
+      <div>
+        <h2>Рефлексия: уровень сформированности компетенций</h2>
+        <p>Самооценка по трём ключевым группам компетенций и план устранения дефицитов</p>
+      </div>
+    </div>
+
+    <div class="tbl-wrap rv">
+      <table>
+        <thead>
+          <tr><th style="width:26%">Компетенция</th><th style="width:16%">Уровень</th><th>Обоснование</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Предметно-методическая<br><span class="muted" style="font-size:12.5px">знание языка Python и умение объяснить его школьникам</span></td>
+            <td><span class="badge b-mid">Средний (достаточный)</span></td>
+            <td>Я успешно спланировал систему задач от репродуктивной до творческой. Однако при формулировке заданий для нейросети я столкнулся с трудностью: как задать промпт так, чтобы ИИ выдал дидактически ценный материал, а не просто «решённую задачу». Требуется практика в составлении точных запросов.</td>
+          </tr>
+          <tr>
+            <td>Психолого-педагогическая<br><span class="muted" style="font-size:12.5px">учёт возрастных особенностей, мотивация</span></td>
+            <td><span class="badge b-mid">Средний</span></td>
+            <td>Проблемная ситуация со «светофором» и «столовой» опирается на жизненный опыт восьмиклассников. Однако я понял, что мне не хватает знаний о том, как удерживать внимание класса при работе с кодом на экране (риск пассивного наблюдателя).</td>
+          </tr>
+          <tr>
+            <td>ИКТ-компетентность<br><span class="muted" style="font-size:12.5px">с акцентом на ИИ</span></td>
+            <td><span class="badge b-low">Низкий (дефицитарный)</span></td>
+            <td>Это главный дефицит. Хотя я знаю, что умеют нейросети, мне не хватает системного понимания того, как встраивать их в урок, чтобы не нарушать академическую честность и не создавать неравенство (у кого-то дома нет ПК с ИИ). Я не до конца понимаю, как оценивать работы, выполненные с помощью ИИ.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card rv" style="margin-top:16px">
+      <h3>План устранения педагогических дефицитов</h3>
+      <p class="muted">Опираясь на практику составления индивидуальных образовательных маршрутов для педагогов, намечаю следующие шаги.</p>
+      <div class="tl" style="margin-top:18px">
+        <div class="item">
+          <h4>1. В области ИКТ и работы с нейросетями</h4>
+          <p><b>Мероприятие:</b> пройти мини-курс или серию вебинаров по теме «Методика использования генеративных моделей на уроках информатики» (например, на платформах «Сферум» или «Просвещение»).</p>
+          <p><b>Практика:</b> разработать и провести фрагмент урока, где ИИ используется только как инструмент для генерации идей (например, «Придумай 5 примеров ветвления в играх»), а оценка ставится за анализ и верификацию этих примеров учениками.</p>
+          <p><b>Срок:</b> в течение семестра.</p>
+        </div>
+        <div class="item">
+          <h4>2. В области методики преподавания программирования</h4>
+          <p><b>Мероприятие:</b> посетить уроки опытных учителей информатики (наставника) по теме «Алгоритмизация и программирование».</p>
+          <p><b>Задача:</b> понаблюдать за приёмами удержания внимания класса и способами работы с ошибками учеников (как учитель реагирует на синтаксические ошибки в коде).</p>
+          <p><b>Срок:</b> ближайшая педагогическая практика.</p>
+        </div>
+        <div class="item">
+          <h4>3. В области психологии обучения</h4>
+          <p><b>Мероприятие:</b> изучить материалы по теме «Формирование критического мышления на уроках информатики» (например, через анализ кейсов с ошибками ИИ).</p>
+          <p><b>Результат:</b> разработать памятку для учеников «Как проверять код, предложенный нейросетью» (3–4 чётких правила).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote rv" style="margin-top:16px">
+      <b>Резюме.</b> Я осознаю, что современный урок информатики не может игнорировать ИИ, но его внедрение должно быть методически обоснованным. Главный вывод: <b>ИИ не должен давать готовые ответы</b> — он должен создавать проблемные ситуации, которые ученик решает с помощью знаний, полученных от учителя.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>МГПУ ИЦО · Группа МПИНФ261-м · Основы психолого-педагогической деятельности · 2026</div>
+    <a class="up" href="#top">↑ Наверх</a>
+  </div>
+</footer>
+
+<script>
+/* ---------- нейросеть на фоне ---------- */
+(function(){
+  const cv = document.getElementById('neural');
+  const ctx = cv.getContext('2d');
+  let w, h, dpr, nodes = [];
+  const LINK = 150;
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = cv.width = Math.floor(innerWidth * dpr);
+    h = cv.height = Math.floor(innerHeight * dpr);
+    cv.style.width = innerWidth + 'px';
+    cv.style.height = innerHeight + 'px';
+    const count = Math.min(90, Math.round(innerWidth * innerHeight / 20000));
+    nodes = Array.from({length: count}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - .5) * .28 * dpr,
+      vy: (Math.random() - .5) * .28 * dpr,
+      r: (Math.random() * 1.7 + 1) * dpr
+    }));
+  }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function frame(){
+    ctx.clearRect(0, 0, w, h);
+    for (const n of nodes){
+      if (!reduce){
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 0 || n.x > w) n.vx *= -1;
+        if (n.y < 0 || n.y > h) n.vy *= -1;
+      }
+    }
+    for (let i = 0; i < nodes.length; i++){
+      for (let j = i + 1; j < nodes.length; j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.hypot(dx, dy);
+        if (d < LINK * dpr){
+          const t = 1 - d / (LINK * dpr);
+          const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+          g.addColorStop(0, 'rgba(0,200,224,' + (t * .30) + ')');
+          g.addColorStop(1, 'rgba(124,92,255,' + (t * .30) + ')');
+          ctx.strokeStyle = g;
+          ctx.lineWidth = t * 1.15 * dpr;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+      }
+    }
+    for (const n of nodes){
+      const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 5);
+      g.addColorStop(0, 'rgba(124,92,255,.55)');
+      g.addColorStop(1, 'rgba(124,92,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(60,70,160,.55)';
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+
+  addEventListener('resize', () => { resize(); if (reduce) frame(); });
+  resize(); frame();
+})();
+
+/* ---------- появление блоков ---------- */
+(function(){
+  const els = document.querySelectorAll('.rv');
+  if (!('IntersectionObserver' in window)){
+    els.forEach(e => e.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, {threshold: .12, rootMargin: '0px 0px -8% 0px'});
+  els.forEach(e => io.observe(e));
+})();
+
+/* ---------- подсветка активного пункта меню ---------- */
+(function(){
+  const links = [...document.querySelectorAll('nav a')];
+  const map = new Map();
+  links.forEach(a => {
+    const id = a.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) map.set(el, a);
+  });
+  const secs = [...map.keys()];
+  function onScroll(){
+    const y = scrollY + 120;
+    let cur = secs[0];
+    for (const s of secs) if (s.offsetTop <= y) cur = s;
+    links.forEach(a => a.classList.remove('active'));
+    if (map.get(cur)) map.get(cur).classList.add('active');
+  }
+  addEventListener('scroll', onScroll, {passive: true});
+  onScroll();
+})();
+</script>
+</body>
+</html>
